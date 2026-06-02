@@ -5,9 +5,9 @@ from datetime import date
 # ── Grid constants ────────────────────────────────────────────────────────────
 ROWS   = 80          # max years rendered
 COLS   = 52          # weeks per year
-BOX    = 10          # box size in pixels
-GAP    = 2           # gap between boxes
-CELL   = BOX + GAP   # 12 px per cell
+BOX    = 15          # box size in pixels
+GAP    = 3           # gap between boxes
+CELL   = BOX + GAP   # 18 px per cell
 YEAR_W = 32          # left column reserved for year labels
 
 # ── Colour palette ────────────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ class App:
         self.root = root
         self.root.title("4000 Weeks")
         self.root.configure(bg=BG)
-        self._center(820, 730)
+        self._center(1200, 576)
         self._build_ui()
         self._refresh()
 
@@ -52,9 +52,7 @@ class App:
         f = tk.Frame(self.root, bg=BG)
         f.pack(fill='x', padx=30, pady=(22, 2))
         tk.Label(f, text="4,000 Weeks", bg=BG, fg=TEXT_FG,
-                 font=('Arial', 26, 'bold')).pack(side='left')
-        tk.Label(f, text="a visualization of your life", bg=BG, fg=DIM_FG,
-                 font=('Arial', 11)).pack(side='left', padx=(14, 0), pady=(6, 0))
+                 font=('Arial', 50, 'bold')).pack(side='left')
 
     def _build_controls(self):
         f = tk.Frame(self.root, bg=BG)
@@ -69,10 +67,9 @@ class App:
             e.pack(side='left', padx=(0, 18), ipady=3)
             e.bind('<Return>', lambda _: self._refresh())
 
-        self.dob_var  = tk.StringVar(value='1990-01-01')
+        self.dob_var  = tk.StringVar(value='1998-10-15')
         self.life_var = tk.StringVar(value='80')
         entry("Born (YYYY-MM-DD):", self.dob_var,  12)
-        entry("Life expectancy (yrs):", self.life_var, 4)
 
         tk.Button(f, text="Update", command=self._refresh,
                   bg=ACCENT, fg='white', relief='flat', cursor='hand2',
