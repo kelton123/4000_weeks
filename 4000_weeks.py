@@ -8,15 +8,14 @@ COLS   = 52          # weeks per year
 BOX    = 15          # box size in pixels
 GAP    = 5           # gap between boxes
 CELL   = BOX + GAP   # 18 px per cell
-YEAR_W = 32          # left column reserved for year labels
+YEAR_W = 30          # left column reserved for year labels
 
 # ── Colour palette ────────────────────────────────────────────────────────────
-BG           = '#121212' # done
-PAST_COLOR   = '#8e8e93' # done
-NOW_COLOR    = '#ffd500' # done
-FUTURE_COLOR = '#3a3a3c' # done
-TEXT_FG      = '#f2f2f7' # done
-ENTRY_BG     = '#3a3a3c'
+BG           = '#121212'
+PAST_COLOR   = '#8e8e93'
+NOW_COLOR    = '#ffd500'
+FUTURE_COLOR = '#3a3a3c'
+TEXT_FG      = '#f2f2f7'
 
 # ── Font sizes ────────────────────────────────────────────────────────────
 H1    = 42
@@ -33,9 +32,10 @@ class App:
         self.root.title("4000 Weeks")
         self.root.configure(bg=BG)
         self._center(960, 540)
-        self.root.state("zoomed")
+        self.root.state("zoomed") # Make the window maximized.
         self._build_ui()
         self._refresh()
+
         # Finalise scroll region after all widgets are laid out
         self.root.after(50, self._fix_scrollregion)
 
@@ -103,7 +103,7 @@ class App:
         def entry(label, var, width):
             tk.Label(f, text=label, bg=BG, fg=TEXT_FG,
                      font=('Arial', BODY)).pack(side='left', padx=(0, 5))
-            e = tk.Entry(f, textvariable=var, width=width, bg=ENTRY_BG,
+            e = tk.Entry(f, textvariable=var, width=width, bg=FUTURE_COLOR,
                          fg=TEXT_FG, insertbackground=TEXT_FG,
                          relief='flat', font=('Arial', BODY))
             e.pack(side='left', padx=(0, 18), ipady=3)
@@ -159,9 +159,11 @@ class App:
         self._boxes: list[list[int]] = []
         for year in range(ROWS):
             y_top = GAP + year * CELL
+
+            # Create a label every 5 years
             if year % 5 == 0:
                 self.canvas.create_text(
-                    YEAR_W - 4, y_top + BOX // 2,
+                    YEAR_W, y_top + BOX // 2,
                     text=str(year), anchor='e',
                     fill=TEXT_FG, font=('Arial', LABEL),
                 )
