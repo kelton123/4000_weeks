@@ -11,15 +11,12 @@ CELL   = BOX + GAP   # 18 px per cell
 YEAR_W = 32          # left column reserved for year labels
 
 # ── Colour palette ────────────────────────────────────────────────────────────
-BG           = '#0f0f0f'
-PAST_COLOR   = '#4a90e2'
-NOW_COLOR    = '#f5a623'
-FUTURE_COLOR = '#252525'
-BEYOND_COLOR = '#181818'
-TEXT_FG      = '#f4f4f4'
-DIM_FG       = '#777777'
-ACCENT       = '#4a90e2'
-ENTRY_BG     = '#1e1e1e'
+BG           = '#121212' # done
+PAST_COLOR   = '#8e8e93' # done
+NOW_COLOR    = '#ffd500' # done
+FUTURE_COLOR = '#3a3a3c' # done
+TEXT_FG      = '#f2f2f7' # done
+ENTRY_BG     = '#3a3a3c'
 
 # ── Font sizes ────────────────────────────────────────────────────────────
 H1    = 42
@@ -104,7 +101,7 @@ class App:
         f.pack(pady=(6, 10))
 
         def entry(label, var, width):
-            tk.Label(f, text=label, bg=BG, fg=DIM_FG,
+            tk.Label(f, text=label, bg=BG, fg=TEXT_FG,
                      font=('Arial', BODY)).pack(side='left', padx=(0, 5))
             e = tk.Entry(f, textvariable=var, width=width, bg=ENTRY_BG,
                          fg=TEXT_FG, insertbackground=TEXT_FG,
@@ -117,7 +114,7 @@ class App:
         entry("Born:", self.dob_var, BODY)
 
         tk.Button(f, text="Update", command=self._refresh,
-                  bg=ACCENT, fg='white', relief='flat', cursor='hand2',
+                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
                   font=('Arial', LABEL, 'bold'), padx=14, pady=3).pack(side='left')
 
     def _build_stats(self):
@@ -127,7 +124,7 @@ class App:
         for key in ('Weeks lived', 'Weeks remaining', 'Years left', 'Life complete'):
             col = tk.Frame(f, bg=BG)
             col.pack(side='left', padx=(0, 34))
-            tk.Label(col, text=key, bg=BG, fg=DIM_FG,
+            tk.Label(col, text=key, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(anchor='w')
             v = tk.StringVar(value='—')
             self._stat_vars[key] = v
@@ -145,7 +142,7 @@ class App:
             dot = tk.Canvas(f, width=10, height=10, bg=BG, highlightthickness=0)
             dot.create_rectangle(0, 0, 10, 10, fill=color, outline='')
             dot.pack(side='left', padx=(0, 5))
-            tk.Label(f, text=label, bg=BG, fg=DIM_FG,
+            tk.Label(f, text=label, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(side='left', padx=(0, 18))
 
     def _build_grid(self):
@@ -166,7 +163,7 @@ class App:
                 self.canvas.create_text(
                     YEAR_W - 4, y_top + BOX // 2,
                     text=str(year), anchor='e',
-                    fill=DIM_FG, font=('Arial', LABEL),
+                    fill=TEXT_FG, font=('Arial', LABEL),
                 )
             row: list[int] = []
             for week in range(COLS):
@@ -223,8 +220,6 @@ class App:
                     color = PAST_COLOR
                 elif n == weeks_lived - 1:
                     color = NOW_COLOR
-                elif n >= total_weeks:
-                    color = BEYOND_COLOR
                 else:
                     color = FUTURE_COLOR
                 self.canvas.itemconfig(rect, fill=color)
