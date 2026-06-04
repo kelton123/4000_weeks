@@ -51,7 +51,7 @@ class App:
     def _build_header(self):
         f = tk.Frame(self.root, bg=BG)
         f.pack(fill='x', padx=30, pady=(22, 2))
-        tk.Label(f, text="4,000 Weeks", bg=BG, fg=TEXT_FG,
+        tk.Label(f, text="4000 Weeks", bg=BG, fg=TEXT_FG,
                  font=('Arial', 50, 'bold')).pack(side='left')
 
     def _build_controls(self):
@@ -69,7 +69,7 @@ class App:
 
         self.dob_var  = tk.StringVar(value='1998-10-15')
         self.life_var = tk.StringVar(value='80')
-        entry("Born (YYYY-MM-DD):", self.dob_var,  12)
+        entry("Born:", self.dob_var,  12)
 
         tk.Button(f, text="Update", command=self._refresh,
                   bg=ACCENT, fg='white', relief='flat', cursor='hand2',
