@@ -105,7 +105,7 @@ class App:
         frame.pack_propagate(False)
 
         # ── Input controls ────────────────────────────────────────
-        tk.Label(frame, text="Born:", bg=BG, fg=TEXT_FG,
+        tk.Label(frame, text="Born ", bg=BG, fg=TEXT_FG,
                  font=('Arial', BODY)).pack(side='left', padx=(0, 5))
         
         self.dob_var = tk.StringVar(value='1998-10-15')
@@ -133,12 +133,12 @@ class App:
         # Load button to import data from a saved json file
         tk.Button(frame, text="Load", command=self._refresh,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10)
+                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10, ipadx=10)
         
         # Save button to save data to json
         tk.Button(frame, text="Save", command=self._refresh,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10)
+                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10, ipadx=10)
 
         # ── Divider ───────────────────────────────────────────────
         tk.Frame(frame, bg=BG, width=2, height=36).pack(
@@ -178,6 +178,15 @@ class App:
 
             tk.Label(frame, text=label, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(side='left', padx=(0, 18))
+            
+        # ── Divider ───────────────────────────────────────────────
+        tk.Frame(frame, bg=FUTURE_COLOR, width=2, height=36).pack(
+            side='left', padx=(0, 18))
+        
+        # ── Custom Labels ─────────────────────────────────────────
+        tk.Button(frame, text="+", command=self._refresh,
+                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
+                  font=('Arial', LABEL, "bold"), pady=0).pack(side='left', padx=10, ipadx=4)
 
     def _build_grid(self):
         outer = tk.Frame(self._content, bg=BG)
