@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk
-from datetime import date
+from datetime import date, timedelta
 
 # ── Grid constants ────────────────────────────────────────────────────────────
 ROWS   = 80          # max years rendered
@@ -15,7 +15,7 @@ BG           = '#0f0f0f'
 PAST_COLOR   = '#4a90e2'
 NOW_COLOR    = '#f5a623'
 FUTURE_COLOR = '#252525'
-BEYOND_COLOR = '#181818'   # weeks beyond stated life expectancy
+BEYOND_COLOR = '#181818'
 TEXT_FG      = '#ffffff'
 DIM_FG       = '#777777'
 ACCENT       = '#4a90e2'
@@ -30,6 +30,8 @@ class App:
         self._center(*self.get_screen_dims())
         self._build_ui()
         self._refresh()
+        # Finalise scroll region after all widgets are laid out
+        self.root.after(50, self._fix_scrollregion)
 
     # ── Window setup ─────────────────────────────────────────────────────────
 
@@ -38,29 +40,58 @@ class App:
         self.root.geometry(f'{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}')
         self.root.minsize(w, h)
 
-    def get_screen_dims(self) ->tuple:
-        width  = self.root.winfo_screenwidth()
-        height = self.root.winfo_screenheight()
+    def get_screen_dims(self) -> tuple:
+        return self.root.winfo_screenwidth(), self.root.winfo_screenheight()
 
-        return width, height
-
-    # ── UI construction ───────────────────────────────────────────────────────
+    # ── Page-level scroll container ───────────────────────────────────────────
 
     def _build_ui(self):
+        vbar = ttk.Scrollbar(self.root, orient='vertical')
+        vbar.pack(side='right', fill='y')
+
+        self._page = tk.Canvas(self.root, bg=BG, highlightthickness=0,
+                               yscrollcommand=vbar.set)
+        self._page.pack(side='left', fill='both', expand=True)
+        vbar.config(command=self._page.yview)
+
+        self._content = tk.Frame(self._page, bg=BG)
+        self._win_id  = self._page.create_window(0, 0, anchor='nw',
+                                                  window=self._content)
+
+        self._page.bind('<Configure>',    self._on_page_resize)
+        self._content.bind('<Configure>', self._on_content_resize)
+        self.root.bind_all('<MouseWheel>', self._scroll)
+
         self._build_header()
         self._build_controls()
         self._build_stats()
         self._build_legend()
         self._build_grid()
+        self._build_footer()
+
+    def _on_page_resize(self, event: tk.Event):
+        self._page.itemconfig(self._win_id, width=event.width)
+
+    def _on_content_resize(self, _: tk.Event):
+        self._page.config(scrollregion=self._page.bbox('all'))
+
+    def _fix_scrollregion(self):
+        self._content.update_idletasks()
+        self._page.config(scrollregion=self._page.bbox('all'))
+
+    def _scroll(self, event: tk.Event):
+        self._page.yview_scroll(-1 * (event.delta // 120), 'units')
+
+    # ── UI sections ───────────────────────────────────────────────────────────
 
     def _build_header(self):
-        f = tk.Frame(self.root, bg=BG)
+        f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(22, 2))
         tk.Label(f, text="4000 Weeks", bg=BG, fg=TEXT_FG,
                  font=('Arial', 50, 'bold')).pack()
 
     def _build_controls(self):
-        f = tk.Frame(self.root, bg=BG)
+        f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(6, 10))
 
         def entry(label, var, width):
@@ -74,14 +105,14 @@ class App:
 
         self.dob_var  = tk.StringVar(value='1998-10-15')
         self.life_var = tk.StringVar(value='80')
-        entry("Born:", self.dob_var,  12)
+        entry("Born:", self.dob_var, 12)
 
         tk.Button(f, text="Update", command=self._refresh,
                   bg=ACCENT, fg='white', relief='flat', cursor='hand2',
                   font=('Arial', 10, 'bold'), padx=14, pady=3).pack(side='left')
 
     def _build_stats(self):
-        f = tk.Frame(self.root, bg=BG)
+        f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(0, 10))
         self._stat_vars: dict[str, tk.StringVar] = {}
         for key in ('Weeks lived', 'Weeks remaining', 'Years left', 'Life complete'):
@@ -95,7 +126,7 @@ class App:
                      font=('Arial', 15, 'bold')).pack(anchor='w')
 
     def _build_legend(self):
-        f = tk.Frame(self.root, bg=BG)
+        f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(0, 8))
         for color, label in (
             (PAST_COLOR,   'Past weeks'),
@@ -109,25 +140,16 @@ class App:
                      font=('Arial', 9)).pack(side='left', padx=(0, 18))
 
     def _build_grid(self):
-        outer = tk.Frame(self.root, bg=BG)
-        outer.pack(expand=True, fill='y', pady=(0, 20))
-
-        vbar = ttk.Scrollbar(outer, orient='vertical')
-        vbar.pack(side='right', fill='y')
+        outer = tk.Frame(self._content, bg=BG)
+        outer.pack(pady=(0, 20))
 
         canvas_w = YEAR_W + COLS * CELL + GAP
         canvas_h = ROWS * CELL + GAP
 
         self.canvas = tk.Canvas(outer, bg=BG, highlightthickness=0,
-                                width=canvas_w, yscrollcommand=vbar.set)
-        self.canvas.pack(side='left', fill='both', expand=True)
-        vbar.config(command=self.canvas.yview)
-        self.canvas.config(scrollregion=(0, 0, canvas_w, canvas_h))
+                                width=canvas_w, height=canvas_h)
+        self.canvas.pack()
 
-        self.canvas.bind('<MouseWheel>',
-                         lambda e: self.canvas.yview_scroll(-1 * (e.delta // 120), 'units'))
-
-        # Draw year labels and week rectangles
         self._boxes: list[list[int]] = []
         for year in range(ROWS):
             y_top = GAP + year * CELL
@@ -147,44 +169,43 @@ class App:
                 row.append(rect)
             self._boxes.append(row)
 
-        # Tooltip
         self._tooltip = self.canvas.create_text(0, 0, text='', anchor='nw',
                                                 fill=TEXT_FG, font=('Arial', 8),
                                                 state='hidden')
         self.canvas.tag_raise(self._tooltip)
-        self.canvas.bind('<Motion>',  self._on_hover)
-        self.canvas.bind('<Leave>',   self._on_leave)
+        self.canvas.bind('<Motion>', self._on_hover)
+        self.canvas.bind('<Leave>',  self._on_leave)
 
-    def build_footer(self):
-        f = tk.Frame(self.root, bg=BG)
+    def _build_footer(self):
+        f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(22, 50))
-        tk.Label(f, text="Designed & Developed by Kelton Boyter-Grant", bg=BG, fg=TEXT_FG,
-                 font=('Arial', 18)).pack()
+        tk.Label(f, text="Designed & Developed by Kelton Boyter-Grant",
+                 bg=NOW_COLOR, fg=TEXT_FG, font=('Arial', 25)).pack()
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
     def _refresh(self):
         try:
-            dob       = date.fromisoformat(self.dob_var.get().strip())
-            life_yrs  = max(1, int(self.life_var.get().strip()))
+            dob      = date.fromisoformat(self.dob_var.get().strip())
+            life_yrs = max(1, int(self.life_var.get().strip()))
         except ValueError:
             return
 
-        today         = date.today()
-        weeks_lived   = max(0, (today - dob).days // 7)
-        total_weeks   = life_yrs * COLS
-        remaining     = max(0, total_weeks - weeks_lived)
-        years_left    = round(remaining / 52, 1)
-        pct           = min(100.0, round(weeks_lived / total_weeks * 100, 1))
+        today        = date.today()
+        weeks_lived  = max(0, (today - dob).days // 7)
+        total_weeks  = life_yrs * COLS
+        remaining    = max(0, total_weeks - weeks_lived)
+        years_left   = round(remaining / 52, 1)
+        pct          = min(100.0, round(weeks_lived / total_weeks * 100, 1))
 
         self._stat_vars['Weeks lived'].set(f'{weeks_lived:,}')
         self._stat_vars['Weeks remaining'].set(f'{remaining:,}')
         self._stat_vars['Years left'].set(str(years_left))
         self._stat_vars['Life complete'].set(f'{pct}%')
 
-        self._weeks_lived  = weeks_lived
-        self._total_weeks  = total_weeks
-        self._dob          = dob
+        self._weeks_lived = weeks_lived
+        self._total_weeks = total_weeks
+        self._dob         = dob
 
         for year, row in enumerate(self._boxes):
             for week, rect in enumerate(row):
@@ -203,7 +224,6 @@ class App:
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
 
-        # Determine which cell the pointer is over
         gx = cx - YEAR_W - GAP
         gy = cy - GAP
         if gx < 0 or gy < 0:
@@ -217,19 +237,14 @@ class App:
             self.canvas.itemconfig(self._tooltip, state='hidden')
             return
 
-        # Compute approximate date for this week
-        week_num = row * COLS + col
+        week_num   = row * COLS + col
         try:
-            from datetime import timedelta
             week_start = self._dob + timedelta(weeks=week_num)
             tip = f'Age {row}y w{col + 1}  ·  ~{week_start.strftime("%b %Y")}'
         except AttributeError:
             tip = f'Year {row}, week {col + 1}'
 
-        # Position tooltip just below and right of cursor
-        tx = cx + 12
-        ty = cy + 12
-        self.canvas.coords(self._tooltip, tx, ty)
+        self.canvas.coords(self._tooltip, cx + 12, cy + 12)
         self.canvas.itemconfig(self._tooltip, text=tip, state='normal')
         self.canvas.tag_raise(self._tooltip)
 
