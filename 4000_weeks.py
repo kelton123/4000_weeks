@@ -162,17 +162,21 @@ class App:
                      font=('Arial', BODY, 'bold')).pack(anchor='w')
 
     def _build_legend(self):
-        f = tk.Frame(self._content, bg=BG)
-        f.pack(pady=(0, 8))
+        frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH, height=50)
+        frame.pack(pady=(0, 8))
+        frame.pack_propagate(False)
+
+
         for color, label in (
             (PAST_COLOR,   'Past'),
             (NOW_COLOR,    'Current'),
             (FUTURE_COLOR, 'Future'),
         ):
-            dot = tk.Canvas(f, width=BOX, height=BOX, bg=BG, highlightthickness=0)
+            dot = tk.Canvas(frame, width=BOX, height=BOX, bg=BG, highlightthickness=0)
             dot.create_rectangle(0, 0, BOX, BOX, fill=color, outline='')
             dot.pack(side='left', padx=(0, 5))
-            tk.Label(f, text=label, bg=BG, fg=TEXT_FG,
+
+            tk.Label(frame, text=label, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(side='left', padx=(0, 18))
 
     def _build_grid(self):
@@ -259,6 +263,12 @@ class App:
                 else:
                     color = FUTURE_COLOR
                 self.canvas.itemconfig(rect, fill=color)
+
+    def load_data(self):
+        print("load data")
+
+    def save_data(self):
+        print("save data")
 
     def _on_hover(self, event: tk.Event):
         cx = self.canvas.canvasx(event.x)
