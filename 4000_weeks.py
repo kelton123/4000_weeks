@@ -135,9 +135,9 @@ class App:
         f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(0, 8))
         for color, label in (
-            (PAST_COLOR,   'Past weeks'),
-            (NOW_COLOR,    'Current week'),
-            (FUTURE_COLOR, 'Future weeks'),
+            (PAST_COLOR,   'Past'),
+            (NOW_COLOR,    'Current'),
+            (FUTURE_COLOR, 'Future'),
         ):
             dot = tk.Canvas(f, width=10, height=10, bg=BG, highlightthickness=0)
             dot.create_rectangle(0, 0, 10, 10, fill=color, outline='')
