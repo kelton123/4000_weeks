@@ -6,7 +6,7 @@ from datetime import date, timedelta
 ROWS   = 80          # max years rendered
 COLS   = 52          # weeks per year
 BOX    = 15          # box size in pixels
-GAP    = 3           # gap between boxes
+GAP    = 5           # gap between boxes
 CELL   = BOX + GAP   # 18 px per cell
 YEAR_W = 32          # left column reserved for year labels
 
@@ -16,10 +16,18 @@ PAST_COLOR   = '#4a90e2'
 NOW_COLOR    = '#f5a623'
 FUTURE_COLOR = '#252525'
 BEYOND_COLOR = '#181818'
-TEXT_FG      = '#ffffff'
+TEXT_FG      = '#f4f4f4'
 DIM_FG       = '#777777'
 ACCENT       = '#4a90e2'
 ENTRY_BG     = '#1e1e1e'
+
+# ── Font sizes ────────────────────────────────────────────────────────────
+H1    = 42
+H2    = 33
+H3    = 26
+BODY  = 16
+LABEL = 13
+
 
 
 class App:
@@ -27,7 +35,8 @@ class App:
         self.root = root
         self.root.title("4000 Weeks")
         self.root.configure(bg=BG)
-        self._center(*self.get_screen_dims())
+        self._center(960, 540)
+        self.root.state("zoomed")
         self._build_ui()
         self._refresh()
         # Finalise scroll region after all widgets are laid out
@@ -88,7 +97,7 @@ class App:
         f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(22, 2))
         tk.Label(f, text="4000 Weeks", bg=BG, fg=TEXT_FG,
-                 font=('Arial', 50, 'bold')).pack()
+                 font=('Arial', H1, 'bold')).pack()
 
     def _build_controls(self):
         f = tk.Frame(self._content, bg=BG)
@@ -96,20 +105,20 @@ class App:
 
         def entry(label, var, width):
             tk.Label(f, text=label, bg=BG, fg=DIM_FG,
-                     font=('Arial', 10)).pack(side='left', padx=(0, 5))
+                     font=('Arial', BODY)).pack(side='left', padx=(0, 5))
             e = tk.Entry(f, textvariable=var, width=width, bg=ENTRY_BG,
                          fg=TEXT_FG, insertbackground=TEXT_FG,
-                         relief='flat', font=('Arial', 10))
+                         relief='flat', font=('Arial', BODY))
             e.pack(side='left', padx=(0, 18), ipady=3)
             e.bind('<Return>', lambda _: self._refresh())
 
         self.dob_var  = tk.StringVar(value='1998-10-15')
         self.life_var = tk.StringVar(value='80')
-        entry("Born:", self.dob_var, 12)
+        entry("Born:", self.dob_var, BODY)
 
         tk.Button(f, text="Update", command=self._refresh,
                   bg=ACCENT, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', 10, 'bold'), padx=14, pady=3).pack(side='left')
+                  font=('Arial', LABEL, 'bold'), padx=14, pady=3).pack(side='left')
 
     def _build_stats(self):
         f = tk.Frame(self._content, bg=BG)
@@ -119,11 +128,11 @@ class App:
             col = tk.Frame(f, bg=BG)
             col.pack(side='left', padx=(0, 34))
             tk.Label(col, text=key, bg=BG, fg=DIM_FG,
-                     font=('Arial', 9)).pack(anchor='w')
+                     font=('Arial', LABEL)).pack(anchor='w')
             v = tk.StringVar(value='—')
             self._stat_vars[key] = v
             tk.Label(col, textvariable=v, bg=BG, fg=TEXT_FG,
-                     font=('Arial', 15, 'bold')).pack(anchor='w')
+                     font=('Arial', BODY, 'bold')).pack(anchor='w')
 
     def _build_legend(self):
         f = tk.Frame(self._content, bg=BG)
@@ -137,7 +146,7 @@ class App:
             dot.create_rectangle(0, 0, 10, 10, fill=color, outline='')
             dot.pack(side='left', padx=(0, 5))
             tk.Label(f, text=label, bg=BG, fg=DIM_FG,
-                     font=('Arial', 9)).pack(side='left', padx=(0, 18))
+                     font=('Arial', LABEL)).pack(side='left', padx=(0, 18))
 
     def _build_grid(self):
         outer = tk.Frame(self._content, bg=BG)
@@ -157,7 +166,7 @@ class App:
                 self.canvas.create_text(
                     YEAR_W - 4, y_top + BOX // 2,
                     text=str(year), anchor='e',
-                    fill=DIM_FG, font=('Arial', 7),
+                    fill=DIM_FG, font=('Arial', LABEL),
                 )
             row: list[int] = []
             for week in range(COLS):
@@ -170,7 +179,7 @@ class App:
             self._boxes.append(row)
 
         self._tooltip = self.canvas.create_text(0, 0, text='', anchor='nw',
-                                                fill=TEXT_FG, font=('Arial', 8),
+                                                fill=TEXT_FG, font=('Arial', LABEL),
                                                 state='hidden')
         self.canvas.tag_raise(self._tooltip)
         self.canvas.bind('<Motion>', self._on_hover)
@@ -180,7 +189,7 @@ class App:
         f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(22, 50))
         tk.Label(f, text="Designed & Developed by Kelton Boyter-Grant",
-                 bg=NOW_COLOR, fg=TEXT_FG, font=('Arial', 25)).pack()
+                 bg=BG, fg=TEXT_FG, font=('Arial', LABEL)).pack()
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
