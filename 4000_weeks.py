@@ -27,17 +27,22 @@ class App:
         self.root = root
         self.root.title("4000 Weeks")
         self.root.configure(bg=BG)
-        self._center(1200, 576)
+        self._center(*self.get_screen_dims())
         self._build_ui()
         self._refresh()
 
     # ── Window setup ─────────────────────────────────────────────────────────
 
     def _center(self, w: int, h: int):
-        sw = self.root.winfo_screenwidth()
-        sh = self.root.winfo_screenheight()
+        sw, sh = self.get_screen_dims()
         self.root.geometry(f'{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}')
         self.root.minsize(w, h)
+
+    def get_screen_dims(self) ->tuple:
+        width  = self.root.winfo_screenwidth()
+        height = self.root.winfo_screenheight()
+
+        return width, height
 
     # ── UI construction ───────────────────────────────────────────────────────
 
