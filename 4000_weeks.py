@@ -9,6 +9,7 @@ BOX    = 15          # box size in pixels
 GAP    = 5           # gap between boxes
 CELL   = BOX + GAP   # 18 px per cell
 YEAR_W = 30          # left column reserved for year labels
+CANVAS_WIDTH = YEAR_W + COLS * CELL + GAP
 
 # ── Colour palette ────────────────────────────────────────────────────────────
 BG           = '#121212'
@@ -70,7 +71,6 @@ class App:
 
         self._build_header()
         self._build_controls()
-        self._build_stats()
         self._build_legend()
         self._build_grid()
         self._build_footer()
@@ -91,39 +91,42 @@ class App:
     # ── UI sections ───────────────────────────────────────────────────────────
 
     def _build_header(self):
-        f = tk.Frame(self._content, bg=BG)
-        f.pack(pady=(22, 2))
-        tk.Label(f, text="4000 Weeks", bg=BG, fg=TEXT_FG,
-                 font=('Arial', H1, 'bold')).pack()
+        frame = tk.Frame(self._content, width=CANVAS_WIDTH, height=80, bg="red")
+        frame.pack(pady=(22, 2))
+        frame.pack_propagate(False)
+
+        # Heading
+        tk.Label(frame, text="4000 Weeks", bg=BG, fg=TEXT_FG,
+                 font=('Arial', H1, 'bold')).pack(anchor="w")
 
     def _build_controls(self):
-        f = tk.Frame(self._content, bg=BG)
+        f = tk.Frame(self._content, bg=NOW_COLOR)
         f.pack(pady=(6, 10))
 
-        def entry(label, var, width):
-            tk.Label(f, text=label, bg=BG, fg=TEXT_FG,
-                     font=('Arial', BODY)).pack(side='left', padx=(0, 5))
-            e = tk.Entry(f, textvariable=var, width=width, bg=FUTURE_COLOR,
-                         fg=TEXT_FG, insertbackground=TEXT_FG,
-                         relief='flat', font=('Arial', BODY))
-            e.pack(side='left', padx=(0, 18), ipady=3)
-            e.bind('<Return>', lambda _: self._refresh())
-
-        self.dob_var  = tk.StringVar(value='1998-10-15')
-        self.life_var = tk.StringVar(value='80')
-        entry("Born:", self.dob_var, BODY)
+        # ── Input controls ────────────────────────────────────────
+        tk.Label(f, text="Born:", bg=BG, fg=TEXT_FG,
+                 font=('Arial', BODY)).pack(side='left', padx=(0, 5))
+        self.dob_var = tk.StringVar(value='1998-10-15')
+        e = tk.Entry(f, textvariable=self.dob_var, width=BODY, bg=FUTURE_COLOR,
+                     fg=TEXT_FG, insertbackground=TEXT_FG,
+                     relief='flat', font=('Arial', BODY))
+        e.pack(side='left', padx=(0, 10), ipady=3)
+        e.bind('<Return>', lambda _: self._refresh())
 
         tk.Button(f, text="Update", command=self._refresh,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), padx=14, pady=3).pack(side='left')
+                  font=('Arial', LABEL, 'bold'), padx=14, pady=2).pack(side='left')
 
-    def _build_stats(self):
-        f = tk.Frame(self._content, bg=BG)
-        f.pack(pady=(0, 10))
+        # ── Divider ───────────────────────────────────────────────
+        tk.Frame(f, bg=BG, width=2, height=36).pack(
+            side='left', padx=24, fill='y')
+
+        # ── Stats ─────────────────────────────────────────────────
         self._stat_vars: dict[str, tk.StringVar] = {}
+        self.life_var = tk.StringVar(value='80')
         for key in ('Weeks lived', 'Weeks remaining', 'Years left', 'Life complete'):
             col = tk.Frame(f, bg=BG)
-            col.pack(side='left', padx=(0, 34))
+            col.pack(side='left', padx=(0, 28))
             tk.Label(col, text=key, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(anchor='w')
             v = tk.StringVar(value='—')
@@ -163,10 +166,14 @@ class App:
             # Create a label every 5 years
             if year % 5 == 0:
                 self.canvas.create_text(
-                    YEAR_W, y_top + BOX // 2,
-                    text=str(year), anchor='e',
-                    fill=TEXT_FG, font=('Arial', LABEL),
+                    YEAR_W - 30,
+                    y_top + BOX // 2,
+                    text=str(year),
+                    anchor='w',
+                    fill=TEXT_FG,
+                    font=('Arial', LABEL),
                 )
+
             row: list[int] = []
             for week in range(COLS):
                 x1 = YEAR_W + GAP + week * CELL
