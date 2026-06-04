@@ -128,7 +128,17 @@ class App:
         # Update button to refresh the grid based on the birth date.
         tk.Button(frame, text="Update", command=self._refresh,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left')
+                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10)
+        
+        # Load button to import data from a saved json file
+        tk.Button(frame, text="Load", command=self._refresh,
+                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
+                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10)
+        
+        # Save button to save data to json
+        tk.Button(frame, text="Save", command=self._refresh,
+                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
+                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10)
 
         # ── Divider ───────────────────────────────────────────────
         tk.Frame(frame, bg=BG, width=2, height=36).pack(
@@ -138,7 +148,7 @@ class App:
         self._stat_vars: dict[str, tk.StringVar] = {}
         self.life_var = tk.StringVar(value='80')
 
-        for key in ('Weeks lived', 'Weeks remaining', 'Years left', 'Life complete'):
+        for key in ('Weeks lived', 'Weeks left', 'Years left', 'Life complete'):
             col = tk.Frame(frame, bg=BG)
             col.pack(side='left', padx=(30, 0))
 
@@ -159,8 +169,8 @@ class App:
             (NOW_COLOR,    'Current'),
             (FUTURE_COLOR, 'Future'),
         ):
-            dot = tk.Canvas(f, width=10, height=10, bg=BG, highlightthickness=0)
-            dot.create_rectangle(0, 0, 10, 10, fill=color, outline='')
+            dot = tk.Canvas(f, width=BOX, height=BOX, bg=BG, highlightthickness=0)
+            dot.create_rectangle(0, 0, BOX, BOX, fill=color, outline='')
             dot.pack(side='left', padx=(0, 5))
             tk.Label(f, text=label, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(side='left', padx=(0, 18))
@@ -231,7 +241,7 @@ class App:
         pct          = min(100.0, round(weeks_lived / total_weeks * 100, 1))
 
         self._stat_vars['Weeks lived'].set(f'{weeks_lived:,}')
-        self._stat_vars['Weeks remaining'].set(f'{remaining:,}')
+        self._stat_vars['Weeks left'].set(f'{remaining:,}')
         self._stat_vars['Years left'].set(str(years_left))
         self._stat_vars['Life complete'].set(f'{pct}%')
 
