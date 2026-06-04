@@ -55,13 +55,13 @@ class App:
 
     def _build_header(self):
         f = tk.Frame(self.root, bg=BG)
-        f.pack(fill='x', padx=30, pady=(22, 2))
+        f.pack(pady=(22, 2))
         tk.Label(f, text="4000 Weeks", bg=BG, fg=TEXT_FG,
-                 font=('Arial', 50, 'bold')).pack(side='left')
+                 font=('Arial', 50, 'bold')).pack()
 
     def _build_controls(self):
         f = tk.Frame(self.root, bg=BG)
-        f.pack(fill='x', padx=30, pady=(6, 10))
+        f.pack(pady=(6, 10))
 
         def entry(label, var, width):
             tk.Label(f, text=label, bg=BG, fg=DIM_FG,
@@ -82,7 +82,7 @@ class App:
 
     def _build_stats(self):
         f = tk.Frame(self.root, bg=BG)
-        f.pack(fill='x', padx=30, pady=(0, 10))
+        f.pack(pady=(0, 10))
         self._stat_vars: dict[str, tk.StringVar] = {}
         for key in ('Weeks lived', 'Weeks remaining', 'Years left', 'Life complete'):
             col = tk.Frame(f, bg=BG)
@@ -96,7 +96,7 @@ class App:
 
     def _build_legend(self):
         f = tk.Frame(self.root, bg=BG)
-        f.pack(fill='x', padx=30, pady=(0, 8))
+        f.pack(pady=(0, 8))
         for color, label in (
             (PAST_COLOR,   'Past weeks'),
             (NOW_COLOR,    'Current week'),
@@ -110,7 +110,7 @@ class App:
 
     def _build_grid(self):
         outer = tk.Frame(self.root, bg=BG)
-        outer.pack(fill='both', expand=True, padx=30, pady=(0, 20))
+        outer.pack(expand=True, fill='y', pady=(0, 20))
 
         vbar = ttk.Scrollbar(outer, orient='vertical')
         vbar.pack(side='right', fill='y')
@@ -154,6 +154,12 @@ class App:
         self.canvas.tag_raise(self._tooltip)
         self.canvas.bind('<Motion>',  self._on_hover)
         self.canvas.bind('<Leave>',   self._on_leave)
+
+    def build_footer(self):
+        f = tk.Frame(self.root, bg=BG)
+        f.pack(pady=(22, 50))
+        tk.Label(f, text="Designed & Developed by Kelton Boyter-Grant", bg=BG, fg=TEXT_FG,
+                 font=('Arial', 18)).pack()
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
