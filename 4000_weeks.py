@@ -12,11 +12,11 @@ YEAR_W = 30          # left column reserved for year labels
 CANVAS_WIDTH = YEAR_W + COLS * CELL + GAP
 
 # ── Colour palette ────────────────────────────────────────────────────────────
-BG           = '#121212'
-PAST_COLOR   = '#8e8e93'
-NOW_COLOR    = '#ffd500'
-FUTURE_COLOR = '#3a3a3c'
-TEXT_FG      = '#f2f2f7'
+BG            = '#121212'
+PAST_COLOR    = '#8e8e93'
+NOW_COLOR     = '#ffd500'
+FUTURE_COLOR  = '#3a3a3c'
+TEXT_FG       = '#f2f2f7'
 
 # Label Colours
 RED           = "#d91d2a"
@@ -54,7 +54,6 @@ WALNUT        = "#b08664"
 STONE         = "#af9980"
 PEBBLE        = "#ad9d8e"
 DARK_OLIVE    = "#8c8c76"
-
 
 DEFAULT_LABEL_COLOURS = [
     (PAST_COLOR,   'Past'),
