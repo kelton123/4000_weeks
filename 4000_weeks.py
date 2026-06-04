@@ -91,46 +91,63 @@ class App:
     # ── UI sections ───────────────────────────────────────────────────────────
 
     def _build_header(self):
-        frame = tk.Frame(self._content, width=CANVAS_WIDTH, height=80, bg="red")
+        frame = tk.Frame(self._content, width=CANVAS_WIDTH, height=80, bg=BG)
         frame.pack(pady=(22, 2))
         frame.pack_propagate(False)
 
         # Heading
         tk.Label(frame, text="4000 Weeks", bg=BG, fg=TEXT_FG,
-                 font=('Arial', H1, 'bold')).pack(anchor="w")
+                 font=('Arial', H1, 'bold')).pack()
 
     def _build_controls(self):
-        f = tk.Frame(self._content, bg=NOW_COLOR)
-        f.pack(pady=(6, 10))
+        frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH, height=100)
+        frame.pack(pady=(6, 10))
+        frame.pack_propagate(False)
 
         # ── Input controls ────────────────────────────────────────
-        tk.Label(f, text="Born:", bg=BG, fg=TEXT_FG,
+        tk.Label(frame, text="Born:", bg=BG, fg=TEXT_FG,
                  font=('Arial', BODY)).pack(side='left', padx=(0, 5))
+        
         self.dob_var = tk.StringVar(value='1998-10-15')
-        e = tk.Entry(f, textvariable=self.dob_var, width=BODY, bg=FUTURE_COLOR,
-                     fg=TEXT_FG, insertbackground=TEXT_FG,
-                     relief='flat', font=('Arial', BODY))
-        e.pack(side='left', padx=(0, 10), ipady=3)
-        e.bind('<Return>', lambda _: self._refresh())
 
-        tk.Button(f, text="Update", command=self._refresh,
+        # Birth date entry.
+        birthday_entry = tk.Entry(
+            frame,
+            textvariable     = self.dob_var,
+            bg               = FUTURE_COLOR,
+            fg               = TEXT_FG,
+            insertbackground = TEXT_FG,
+            relief           = 'flat',
+            font             = ('Arial', BODY),
+            width            = 0
+            )
+        
+        birthday_entry.pack(side='left', padx=(0, 10), ipady=3, ipadx=5)
+        birthday_entry.bind('<Return>', lambda _: self._refresh())
+
+        # Update button to refresh the grid based on the birth date.
+        tk.Button(frame, text="Update", command=self._refresh,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), padx=14, pady=2).pack(side='left')
+                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left')
 
         # ── Divider ───────────────────────────────────────────────
-        tk.Frame(f, bg=BG, width=2, height=36).pack(
-            side='left', padx=24, fill='y')
+        tk.Frame(frame, bg=BG, width=2, height=36).pack(
+            side='left', padx=24, fill="both", expand=True)
 
         # ── Stats ─────────────────────────────────────────────────
         self._stat_vars: dict[str, tk.StringVar] = {}
         self.life_var = tk.StringVar(value='80')
+
         for key in ('Weeks lived', 'Weeks remaining', 'Years left', 'Life complete'):
-            col = tk.Frame(f, bg=BG)
-            col.pack(side='left', padx=(0, 28))
+            col = tk.Frame(frame, bg=BG)
+            col.pack(side='left', padx=(30, 0))
+
             tk.Label(col, text=key, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(anchor='w')
+            
             v = tk.StringVar(value='—')
             self._stat_vars[key] = v
+
             tk.Label(col, textvariable=v, bg=BG, fg=TEXT_FG,
                      font=('Arial', BODY, 'bold')).pack(anchor='w')
 
