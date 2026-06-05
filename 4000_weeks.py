@@ -5,7 +5,7 @@ from tkinter import ttk, filedialog, messagebox
 from datetime import date, timedelta
 
 # ── Grid constants ────────────────────────────────────────────────────────────
-ROWS          = 80          # max years rendered
+ROWS          = 81          # max years rendered
 COLS          = 52          # weeks per year
 BOX           = 15          # box size in pixels
 GAP           = 5           # gap between boxes
@@ -300,7 +300,7 @@ class App:
 
         # Divider
         tk.Frame(self._legend_frame, bg=FUTURE_COLOR, width=2, height=18).pack(
-            side='left', padx=(0, 10))
+            side='left', padx=(0, 25))
 
         # New label entry + add button
         self._label_name_var.set('')
