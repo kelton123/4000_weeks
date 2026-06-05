@@ -267,8 +267,9 @@ class App:
                      font=('Arial', BODY, 'bold')).pack(anchor='w')
 
     def _build_legend(self):
-        self._legend_frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH)
+        self._legend_frame = tk.Frame(self._content, bg= BG, width= CANVAS_WIDTH, height= 40)
         self._legend_frame.pack(pady=(0, 30))
+        self._legend_frame.pack_propagate(False)
         self._label_name_var = tk.StringVar()
         self._rebuild_legend()
 
