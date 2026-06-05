@@ -1,8 +1,12 @@
 import json
+import os
 import random
+import shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from datetime import date, timedelta
+
+from PIL import Image, ImageTk
 
 # ── Grid constants ────────────────────────────────────────────────────────────
 ROWS          = 81          # max years rendered
@@ -88,12 +92,17 @@ class App:
         self.root.state("zoomed")
 
         # ── Runtime state ─────────────────────────────────────────
-        self._custom_labels: list[dict] = []      # [{name, color}, …]
-        self._week_labels:   dict[int, int] = {}  # week_num → label index
+        self._custom_labels: list[dict]             = []   # [{name, color}, …]
+        self._week_labels:   dict[int, int]         = {}   # week_num → label index
+        self._week_notes:    dict[int, dict]        = {}   # week_num → {description, image_path}
+        self._photo_cache:   dict[int, ImageTk.PhotoImage] = {}  # keeps refs alive
 
-        self._weeks_lived = 0
-        self._total_weeks = 0
-        self._dob         = None
+        self._weeks_lived   = 0
+        self._total_weeks   = 0
+        self._dob           = None
+        self._click_pending = None   # after() ID for delayed single-click
+        self._tooltip_win:  tk.Toplevel | None = None
+        self._tooltip_week: int | None = None
 
         self._build_ui()
         self._refresh()
@@ -321,17 +330,14 @@ class App:
         name = self._label_name_var.get().strip()
         if not name:
             return
-
-        used_colors = {lbl['color'].lower() for lbl in self._custom_labels}
-        used_colors |= {PAST_COLOR.lower(), NOW_COLOR.lower(), FUTURE_COLOR.lower()}
-        available = [c for c in PALETTE if c.lower() not in used_colors]
+        used = {lbl['color'].lower() for lbl in self._custom_labels}
+        used |= {PAST_COLOR.lower(), NOW_COLOR.lower(), FUTURE_COLOR.lower()}
+        available = [c for c in PALETTE if c.lower() not in used]
         if not available:
             messagebox.showwarning("No colours left",
                                    "All palette colours are already in use.")
             return
-
-        color = random.choice(available)
-        self._custom_labels.append({'name': name, 'color': color})
+        self._custom_labels.append({'name': name, 'color': random.choice(available)})
         self._rebuild_legend()
 
     def _remove_custom_label(self, idx: int):
@@ -355,14 +361,12 @@ class App:
         outer = tk.Frame(self._content, bg=BG)
         outer.pack(pady=(0, 20))
 
-        canvas_h = ROWS * CELL + GAP
-
         self.canvas = tk.Canvas(outer, bg=BG, highlightthickness=0,
-                                width=CANVAS_WIDTH, height=canvas_h)
+                                width=CANVAS_WIDTH, height=ROWS * CELL + GAP)
         self.canvas.pack()
 
         self._boxes: list[list[int]] = []
-        self.years_labels = []
+        self.years_labels: list[int] = []
 
         for year in range(ROWS):
             y_top = GAP + year * CELL
@@ -393,8 +397,8 @@ class App:
                 row.append(rect)
             
             # Add the year to the right of the grid
-            birth_year = int(self.dob_var.get()[0:4])
             if year % 5 == 0:
+                birth_year = int(self.dob_var.get()[0:4])
                 year_label = self.canvas.create_text(
                     CANVAS_WIDTH -  50,
                     y_top + BOX // 2,
@@ -407,30 +411,10 @@ class App:
 
             self._boxes.append(row)
 
-        self._tooltip_bg = self.canvas.create_rectangle(
-            0,
-            0,
-            1,
-            1,
-            fill    = BG,
-            outline = '',
-            state   = 'hidden'
-            )
-        
-        self._tooltip = self.canvas.create_text(
-            0,
-            0,
-            text   = '',
-            anchor = 'nw',
-            fill   = TEXT_FG,
-            font   = ('Arial', BODY),
-            state  = 'hidden'
-            )
-        
-        self.canvas.tag_raise(self._tooltip)
-        self.canvas.bind('<Motion>',   self._on_hover)
-        self.canvas.bind('<Leave>',    self._on_leave)
-        self.canvas.bind('<Button-1>', self._on_click)
+        self.canvas.bind('<Motion>',          self._on_hover)
+        self.canvas.bind('<Leave>',           self._on_leave)
+        self.canvas.bind('<Button-1>',        self._on_click)
+        self.canvas.bind('<Double-Button-1>', self._on_double_click)
 
     def _build_footer(self):
         f = tk.Frame(self._content, bg=BG)
@@ -447,12 +431,12 @@ class App:
         except ValueError:
             return
 
-        today        = date.today()
-        weeks_lived  = max(0, (today - dob).days // 7)
-        total_weeks  = life_yrs * COLS
-        remaining    = max(0, total_weeks - weeks_lived)
-        years_left   = round(remaining / 52, 1)
-        pct          = min(100.0, round(weeks_lived / total_weeks * 100, 1))
+        today       = date.today()
+        weeks_lived = max(0, (today - dob).days // 7)
+        total_weeks = life_yrs * COLS
+        remaining   = max(0, total_weeks - weeks_lived)
+        years_left  = round(remaining / 52, 1)
+        pct         = min(100.0, round(weeks_lived / total_weeks * 100, 1))
 
         self._stat_vars['Weeks lived'].set(f'{weeks_lived:,}')
         self._stat_vars['Weeks left'].set(f'{remaining:,}')
@@ -484,6 +468,12 @@ class App:
     # ── Grid interaction ──────────────────────────────────────────────────────
 
     def _on_click(self, event: tk.Event):
+        if self._click_pending:
+            self.root.after_cancel(self._click_pending)
+        self._click_pending = self.root.after(250, lambda: self._do_single_click(event))
+
+    def _do_single_click(self, event: tk.Event):
+        self._click_pending = None
         if not self._custom_labels:
             return
 
@@ -514,53 +504,239 @@ class App:
             self._week_labels[week_num] = next_idx
             self.canvas.itemconfig(rect, fill=self._custom_labels[next_idx]['color'])
 
+        # Invalidate tooltip cache for this cell so it refreshes
+        if self._tooltip_week == week_num:
+            self._tooltip_week = None
+
+    def _on_double_click(self, event: tk.Event):
+        if self._click_pending:
+            self.root.after_cancel(self._click_pending)
+            self._click_pending = None
+
+        cx, cy = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
+        gx, gy = cx - YEAR_W - GAP, cy - GAP
+        if gx < 0 or gy < 0:
+            return
+
+        col, row = int(gx // CELL), int(gy // CELL)
+        if not (0 <= col < COLS and 0 <= row < ROWS):
+            return
+
+        week_num = row * COLS + col
+        if week_num >= self._weeks_lived - 1:
+            return
+
+        self._open_note_dialog(week_num)
+
     def _on_hover(self, event: tk.Event):
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
         gx = cx - YEAR_W - GAP
         gy = cy - GAP
         if gx < 0 or gy < 0:
-            self.canvas.itemconfig(self._tooltip, state='hidden')
-            self.canvas.itemconfig(self._tooltip_bg, state='hidden')
+            self._hide_tooltip()
             return
 
         col = int(gx // CELL)
         row = int(gy // CELL)
         if not (0 <= col < COLS and 0 <= row < ROWS):
-            self.canvas.itemconfig(self._tooltip, state='hidden')
-            self.canvas.itemconfig(self._tooltip_bg, state='hidden')
+            self._hide_tooltip()
             return
 
         week_num = row * COLS + col
-        try:
-            week_start = self._dob + timedelta(weeks=week_num)
-            tip = f'{row} years & {col + 1} weeks\n{week_start.strftime("%b %Y")}'
-            custom_label_background_fill = BG
-            
-            if week_num in self._week_labels:
-                tip += f'\n{self._custom_labels[self._week_labels[week_num]]["name"]}'
+        screen_x = self.canvas.winfo_rootx() + event.x
+        screen_y = self.canvas.winfo_rooty() + event.y
 
-                custom_label_background_fill = self._custom_labels[self._week_labels[week_num]]["color"]
-            
-            self.canvas.itemconfig(self._tooltip_bg, fill= custom_label_background_fill)
-        except (AttributeError, TypeError) as e:
-            print(e)
-            tip = f'Year {row}, week {col + 1}'
-
-        self.canvas.coords(self._tooltip, cx + 16, cy + 14)
-        self.canvas.itemconfig(self._tooltip, text=tip, state='normal')
-        bbox = self.canvas.bbox(self._tooltip)
-        if bbox:
-            self.canvas.coords(self._tooltip_bg,
-                               bbox[0] - 6, bbox[1] - 4,
-                               bbox[2] + 6, bbox[3] + 4)
-        self.canvas.itemconfig(self._tooltip_bg, state='normal')
-        self.canvas.tag_raise(self._tooltip_bg)
-        self.canvas.tag_raise(self._tooltip)
+        if week_num != self._tooltip_week:
+            self._tooltip_week = week_num
+            self._show_tooltip(week_num, screen_x, screen_y)
+        elif self._tooltip_win:
+            self._tooltip_win.geometry(f'+{screen_x + 14}+{screen_y + 14}')
 
     def _on_leave(self, _=None):
-        self.canvas.itemconfig(self._tooltip, state='hidden')
-        self.canvas.itemconfig(self._tooltip_bg, state='hidden')
+        self._hide_tooltip()
+        self._tooltip_week = None
+
+    # ── Tooltip ───────────────────────────────────────────────────────────────
+
+    def _show_tooltip(self, week_num: int, screen_x: int, screen_y: int):
+        self._hide_tooltip()
+
+        row, col = divmod(week_num, COLS)
+        try:
+            week_start = self._dob + timedelta(weeks=week_num)
+            header = f'{row} years & {col + 1} weeks  ·  {week_start.strftime("%b %Y")}'
+        except (AttributeError, TypeError):
+            header = f'Year {row}, week {col + 1}'
+
+        note        = self._week_notes.get(week_num)
+        has_note    = bool(note and (note.get('description') or note.get('image_path')))
+        label_entry = (self._custom_labels[self._week_labels[week_num]]
+                       if week_num in self._week_labels else None)
+
+        win = tk.Toplevel(self.root)
+        win.overrideredirect(True)
+        win.configure(bg=BG)
+        win.attributes('-topmost', True)
+
+        pad = 10
+
+        tk.Label(win, text=header, bg=BG, fg=TEXT_FG,
+                 font=('Arial', LABEL)).pack(anchor='w', padx=pad, pady=(pad, 2))
+
+        if label_entry:
+            lf = tk.Frame(win, bg=BG)
+            lf.pack(anchor='w', padx=pad, pady=(0, 4))
+            dot = tk.Canvas(lf, width=10, height=10, bg=BG, highlightthickness=0)
+            dot.create_rectangle(0, 0, 10, 10, fill=label_entry['color'], outline='')
+            dot.pack(side='left', padx=(0, 5))
+            tk.Label(lf, text=label_entry['name'], bg=BG, fg=TEXT_FG,
+                     font=('Arial', LABEL)).pack(side='left')
+
+        if has_note:
+            body = tk.Frame(win, bg=BG)
+            body.pack(fill='x', padx=pad, pady=(4, pad))
+
+            img_path = note.get('image_path')
+            if img_path and os.path.isfile(img_path):
+                if week_num not in self._photo_cache:
+                    try:
+                        img = Image.open(img_path)
+                        img.thumbnail((120, 80))
+                        self._photo_cache[week_num] = ImageTk.PhotoImage(img)
+                    except Exception:
+                        pass
+                if week_num in self._photo_cache:
+                    tk.Label(body, image=self._photo_cache[week_num],
+                             bg=BG).pack(side='left', padx=(0, 10))
+
+            desc = note.get('description', '').strip()
+            if desc:
+                tk.Label(body, text=desc, bg=BG, fg=TEXT_FG,
+                         font=('Arial', LABEL), wraplength=220,
+                         justify='left').pack(side='left', anchor='n')
+        else:
+            tk.Frame(win, bg=BG, height=pad).pack()
+
+        win.update_idletasks()
+        win.geometry(f'+{screen_x + 14}+{screen_y + 14}')
+        self._tooltip_win = win
+
+    def _hide_tooltip(self):
+        if self._tooltip_win:
+            try:
+                self._tooltip_win.destroy()
+            except tk.TclError:
+                pass
+            self._tooltip_win = None
+
+    # ── Note dialog ───────────────────────────────────────────────────────────
+
+    def _open_note_dialog(self, week_num: int):
+        self._hide_tooltip()
+        existing = self._week_notes.get(week_num, {})
+
+        row, col = divmod(week_num, COLS)
+        try:
+            week_start = self._dob + timedelta(weeks=week_num)
+            title_text = f'Week note  ·  Age {row}y w{col + 1}  ·  {week_start.strftime("%b %Y")}'
+        except (AttributeError, TypeError):
+            title_text = f'Week note  ·  Year {row}, week {col + 1}'
+
+        dlg = tk.Toplevel(self.root)
+        dlg.title('Week Note')
+        dlg.configure(bg=BG)
+        dlg.resizable(False, False)
+        dlg.grab_set()
+
+        sw, sh = self.get_screen_dims()
+        dlg.geometry(f'440x320+{(sw - 440) // 2}+{(sh - 320) // 2}')
+
+        tk.Label(dlg, text=title_text, bg=BG, fg=TEXT_FG,
+                 font=('Arial', LABEL)).pack(anchor='w', padx=16, pady=(14, 10))
+
+        # ── Image row ─────────────────────────────────────────────
+        img_row = tk.Frame(dlg, bg=BG)
+        img_row.pack(fill='x', padx=16, pady=(0, 10))
+
+        preview = tk.Canvas(img_row, width=120, height=80, bg=FUTURE_COLOR,
+                            highlightthickness=0)
+        preview.pack(side='left', padx=(0, 14))
+
+        chosen_path  = [existing.get('image_path')]
+        photo_ref    = [None]
+        filename_var = tk.StringVar()
+
+        def _load_preview(path):
+            preview.delete('all')
+            if not path or not os.path.isfile(path):
+                filename_var.set('')
+                return
+            try:
+                img = Image.open(path)
+                img.thumbnail((120, 80))
+                photo_ref[0] = ImageTk.PhotoImage(img)
+                preview.create_image(60, 40, image=photo_ref[0], anchor='center')
+                filename_var.set(os.path.basename(path))
+            except Exception:
+                filename_var.set('(could not load image)')
+
+        _load_preview(chosen_path[0])
+
+        def _pick_image():
+            p = filedialog.askopenfilename(
+                parent=dlg, title='Choose image',
+                filetypes=[('Images', '*.jpg *.jpeg *.png *.webp *.gif *.bmp'),
+                           ('All files', '*.*')])
+            if p:
+                chosen_path[0] = p
+                _load_preview(p)
+
+        side = tk.Frame(img_row, bg=BG)
+        side.pack(side='left', anchor='n')
+        tk.Button(side, text='Choose image…', command=_pick_image,
+                  bg=FUTURE_COLOR, fg=TEXT_FG, relief='flat', cursor='hand2',
+                  font=('Arial', LABEL)).pack(anchor='w')
+        tk.Label(side, textvariable=filename_var, bg=BG, fg=TEXT_FG,
+                 font=('Arial', 10), wraplength=230).pack(anchor='w', pady=(4, 0))
+
+        # ── Description ───────────────────────────────────────────
+        tk.Label(dlg, text='Description', bg=BG, fg=TEXT_FG,
+                 font=('Arial', LABEL)).pack(anchor='w', padx=16)
+        desc_box = tk.Text(dlg, height=4, bg=FUTURE_COLOR, fg=TEXT_FG,
+                           insertbackground=TEXT_FG, relief='flat',
+                           font=('Arial', LABEL), wrap='word')
+        desc_box.pack(fill='x', padx=16, pady=(4, 12))
+        if existing.get('description'):
+            desc_box.insert('1.0', existing['description'])
+
+        # ── Buttons ───────────────────────────────────────────────
+        btn_row = tk.Frame(dlg, bg=BG)
+        btn_row.pack(fill='x', padx=16, pady=(0, 16))
+
+        def _save():
+            desc = desc_box.get('1.0', 'end').strip()
+            self._week_notes[week_num] = {
+                'description': desc,
+                'image_path':  chosen_path[0],
+            }
+            self._photo_cache.pop(week_num, None)
+            dlg.destroy()
+
+        def _clear():
+            self._week_notes.pop(week_num, None)
+            self._photo_cache.pop(week_num, None)
+            dlg.destroy()
+
+        tk.Button(btn_row, text='Save', command=_save,
+                  bg=BLUE, fg='white', relief='flat', cursor='hand2',
+                  font=('Arial', LABEL, 'bold'), padx=14).pack(side='left', padx=(0, 8))
+        tk.Button(btn_row, text='Clear', command=_clear,
+                  bg=FUTURE_COLOR, fg=TEXT_FG, relief='flat', cursor='hand2',
+                  font=('Arial', LABEL), padx=14).pack(side='left', padx=(0, 8))
+        tk.Button(btn_row, text='Cancel', command=dlg.destroy,
+                  bg=FUTURE_COLOR, fg=TEXT_FG, relief='flat', cursor='hand2',
+                  font=('Arial', LABEL), padx=14).pack(side='left')
 
     # ── Save / Load ───────────────────────────────────────────────────────────
 
@@ -573,11 +749,29 @@ class App:
         if not path:
             return
 
+        save_dir   = os.path.dirname(os.path.abspath(path))
+        assets_dir = os.path.join(save_dir, '_assets')
+
+        serialised_notes = {}
+        for wn, note in self._week_notes.items():
+            entry   = {'description': note.get('description', '')}
+            img_src = note.get('image_path')
+            if img_src and os.path.isfile(img_src):
+                os.makedirs(assets_dir, exist_ok=True)
+                ext      = os.path.splitext(img_src)[1]
+                dst_name = f'week_{wn}{ext}'
+                shutil.copy2(img_src, os.path.join(assets_dir, dst_name))
+                entry['image_path'] = os.path.join('_assets', dst_name)
+            else:
+                entry['image_path'] = None
+            serialised_notes[str(wn)] = entry
+
         payload = {
             'birthdate':       self.dob_var.get().strip(),
             'life_expectancy': self.life_var.get().strip(),
             'custom_labels':   self._custom_labels,
             'week_labels':     {str(k): v for k, v in self._week_labels.items()},
+            'week_notes':      serialised_notes,
         }
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(payload, f, indent=2)
@@ -599,6 +793,19 @@ class App:
         self._week_labels   = {int(k): v for k, v in
                                payload.get('week_labels', {}).items()}
 
+        json_dir = os.path.dirname(os.path.abspath(path))
+        self._week_notes = {}
+        for wn_str, note in payload.get('week_notes', {}).items():
+            entry    = {'description': note.get('description', '')}
+            rel_path = note.get('image_path')
+            if rel_path:
+                abs_path = os.path.join(json_dir, rel_path)
+                entry['image_path'] = abs_path if os.path.isfile(abs_path) else None
+            else:
+                entry['image_path'] = None
+            self._week_notes[int(wn_str)] = entry
+
+        self._photo_cache.clear()
         self._rebuild_legend()
         self._refresh()
 
