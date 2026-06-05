@@ -5,13 +5,13 @@ from tkinter import ttk, filedialog, messagebox
 from datetime import date, timedelta
 
 # ── Grid constants ────────────────────────────────────────────────────────────
-ROWS   = 80          # max years rendered
-COLS   = 52          # weeks per year
-BOX    = 15          # box size in pixels
-GAP    = 5           # gap between boxes
-CELL   = BOX + GAP   # 20 px per cell
-YEAR_W = 30          # left column reserved for year labels
-CANVAS_WIDTH = YEAR_W + COLS * CELL + GAP
+ROWS          = 80          # max years rendered
+COLS          = 52          # weeks per year
+BOX           = 15          # box size in pixels
+GAP           = 5           # gap between boxes
+CELL          = BOX + GAP   # 20 px per cell
+YEAR_W        = 30          # left column reserved for year labels
+CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W + YEAR_W
 
 # ── Colour palette ────────────────────────────────────────────────────────────
 BG            = '#121212'
@@ -101,33 +101,74 @@ class App:
 
     # ── Window setup ──────────────────────────────────────────────────────────
 
-    def _center(self, w: int, h: int):
-        sw, sh = self.get_screen_dims()
-        self.root.geometry(f'{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}')
-        self.root.minsize(w, h)
+    def _center(self, width: int, height: int):
+        '''
+        Used to center the window in the screen on startup.
+        The default is the top left corner of the screen.
+
+        @param width  : The minimum window width. Should be in the ratio of 16x9.
+        @param height : The minimum window height. Should be in the ration os 16x9.
+        @return       : N/A
+        @raise        : N/A
+        '''
+
+        # Calculate the center of the active screen and set the geometry.
+        screen_width, screen_height = self.get_screen_dims()
+        self.root.geometry(f'{width}x{height}+{(screen_width - width) // 2}+{(screen_height - height) // 2}')
+
+        # Set the minimum screen size for the window.
+        self.root.minsize(width, height)
 
     def get_screen_dims(self) -> tuple:
+        '''
+        Gets the width and the height of the active screen in pixels.
+
+        @param                : N/A
+        @return screen_width  : The number of pixels in the X direction.
+        @return screen_height : The number of pixels in the Y direction.
+        @raise                : N/A 
+        '''
         return self.root.winfo_screenwidth(), self.root.winfo_screenheight()
 
     # ── Page-level scroll container ───────────────────────────────────────────
 
     def _build_ui(self):
-        vbar = ttk.Scrollbar(self.root, orient='vertical')
-        vbar.pack(side='right', fill='y')
+        '''
+        Builds each section of the UI.
+        The structure is similar to a website with a page which holds sections.
 
-        self._page = tk.Canvas(self.root, bg=BG, highlightthickness=0,
-                               yscrollcommand=vbar.set)
+        @param  : N/A
+        @return : N/A
+        @raise  : N/A
+        '''
+
+        # Create scrollbar for the window.
+        scrollbar = ttk.Scrollbar(self.root, orient='vertical')
+        scrollbar.pack(side='right', fill='y')
+
+        # Create the parent page to contain all of the subsections.
+        self._page = tk.Canvas(self.root,
+                               bg                   =BG,
+                               highlightthickness   =0,
+                               yscrollcommand       =scrollbar.set
+                               )
         self._page.pack(side='left', fill='both', expand=True)
-        vbar.config(command=self._page.yview)
+        scrollbar.config(command=self._page.yview)
 
         self._content = tk.Frame(self._page, bg=BG)
-        self._win_id  = self._page.create_window(0, 0, anchor='nw',
-                                                  window=self._content)
+        self._win_id  = self._page.create_window(
+            0,
+            0,
+            anchor='nw',
+            window=self._content
+            )
 
-        self._page.bind('<Configure>',    self._on_page_resize)
-        self._content.bind('<Configure>', self._on_content_resize)
+        # Bind inputs from the user for the page, content frame and window.
+        self._page.bind('<Configure>',     self._on_page_resize)
+        self._content.bind('<Configure>',  self._on_content_resize)
         self.root.bind_all('<MouseWheel>', self._scroll)
 
+        # Build all of the sub-sections
         self._build_header()
         self._build_controls()
         self._build_legend()
@@ -150,25 +191,50 @@ class App:
     # ── UI sections ───────────────────────────────────────────────────────────
 
     def _build_header(self):
+        '''
+        The header section with the program title 4000 Weeks text widget.
+
+        @param  : N/A
+        @return : N/A
+        @raise  : N/A
+        '''
+
+        # Create a frame to keep the header section the same width as the grid section.
         frame = tk.Frame(self._content, width=CANVAS_WIDTH, height=80, bg=BG)
         frame.pack(pady=(22, 2))
         frame.pack_propagate(False)
-        tk.Label(frame, text="4000 Weeks", bg=BG, fg=TEXT_FG,
-                 font=('Arial', H1, 'bold')).pack()
+
+        # The program header.
+        tk.Label(frame, text="4000 Weeks", bg=BG, fg=TEXT_FG, font=('Arial', H1, 'bold')).pack()
 
     def _build_controls(self):
+        '''
+        The controls section which enables the user to type their birthday,
+        update the week visualisation, save the custom grid and load a grid from json.
+        The controls section includes 4 statistics based on how much of their life has passed.
+
+        @param  : N/A
+        @return : N/A
+        @raise  : N/A
+        '''
+        # Container frame for the controls to maintain the grid width and left
+        # align the buttons and right align the stats.
         frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH, height=100)
         frame.pack(pady=(6, 10))
         frame.pack_propagate(False)
 
-        tk.Label(frame, text="Born ", bg=BG, fg=TEXT_FG,
-                 font=('Arial', BODY)).pack(side='left', padx=(0, 5))
+        tk.Label(frame, text="Born ", bg=BG, fg=TEXT_FG, font=('Arial', BODY)).pack(side='left', padx=(0, 5))
+        self.dob_var = tk.StringVar(value='1998-10-15') # Default birthday
 
-        self.dob_var = tk.StringVar(value='1998-10-15')
         birthday_entry = tk.Entry(
-            frame, textvariable=self.dob_var,
-            bg=FUTURE_COLOR, fg=TEXT_FG, insertbackground=TEXT_FG,
-            relief='flat', font=('Arial', BODY), width=0,
+            frame,
+            textvariable     = self.dob_var,
+            bg               = FUTURE_COLOR,
+            fg               = TEXT_FG,
+            insertbackground = TEXT_FG,
+            relief           = 'flat',
+            font             = ('Arial', BODY),
+            width            = 0,
         )
         birthday_entry.pack(side='left', padx=(0, 10), ipady=3, ipadx=5)
         birthday_entry.bind('<Return>', lambda _: self._refresh())
@@ -288,11 +354,10 @@ class App:
         outer = tk.Frame(self._content, bg=BG)
         outer.pack(pady=(0, 20))
 
-        canvas_w = YEAR_W + COLS * CELL + GAP
         canvas_h = ROWS * CELL + GAP
 
         self.canvas = tk.Canvas(outer, bg=BG, highlightthickness=0,
-                                width=canvas_w, height=canvas_h)
+                                width=CANVAS_WIDTH, height=canvas_h)
         self.canvas.pack()
 
         self._boxes: list[list[int]] = []
@@ -304,7 +369,9 @@ class App:
                     text=str(year), anchor='w',
                     fill=TEXT_FG, font=('Arial', LABEL),
                 )
+
             row: list[int] = []
+
             for week in range(COLS):
                 x1 = YEAR_W + GAP + week * CELL
                 rect = self.canvas.create_rectangle(
@@ -312,6 +379,19 @@ class App:
                     fill=FUTURE_COLOR, outline='',
                 )
                 row.append(rect)
+            
+            # Add the year to the right of the grid
+            birth_year = int(self.dob_var.get()[0:4])
+            if year % 5 == 0:
+                self.canvas.create_text(
+                    CANVAS_WIDTH -  50,
+                    y_top + BOX // 2,
+                    text = str(birth_year + year),
+                    anchor = 'w',
+                    fill = TEXT_FG,
+                    font = ('Arial', LABEL)
+                )
+
             self._boxes.append(row)
 
         self._tooltip = self.canvas.create_text(0, 0, text='', anchor='nw',
