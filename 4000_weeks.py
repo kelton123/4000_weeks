@@ -361,6 +361,7 @@ class App:
         self.canvas.pack()
 
         self._boxes: list[list[int]] = []
+        self.years_labels = []
         for year in range(ROWS):
             y_top = GAP + year * CELL
             if year % 5 == 0:
@@ -382,8 +383,9 @@ class App:
             
             # Add the year to the right of the grid
             birth_year = int(self.dob_var.get()[0:4])
+            
             if year % 5 == 0:
-                self.canvas.create_text(
+                year_label = self.canvas.create_text(
                     CANVAS_WIDTH -  50,
                     y_top + BOX // 2,
                     text = str(birth_year + year),
@@ -391,6 +393,7 @@ class App:
                     fill = TEXT_FG,
                     font = ('Arial', LABEL)
                 )
+                self.years_labels.append(year_label)
 
             self._boxes.append(row)
 
@@ -445,6 +448,11 @@ class App:
                 else:
                     color = FUTURE_COLOR
                 self.canvas.itemconfig(rect, fill=color)
+
+        # Update the year labels
+        birth_year = int(self.dob_var.get()[0:4])
+        for i, label_id in enumerate(self.years_labels):
+            self.canvas.itemconfig(label_id, text= str(birth_year + (5*i)))
 
     # ── Grid interaction ──────────────────────────────────────────────────────
 
