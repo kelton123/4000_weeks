@@ -268,7 +268,7 @@ class App:
 
     def _build_legend(self):
         self._legend_frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH)
-        self._legend_frame.pack(pady=(0, 8))
+        self._legend_frame.pack(pady=(0, 30))
         self._label_name_var = tk.StringVar()
         self._rebuild_legend()
 
