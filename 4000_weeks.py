@@ -1,5 +1,7 @@
+import json
+import random
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog, messagebox
 from datetime import date, timedelta
 
 # ── Grid constants ────────────────────────────────────────────────────────────
@@ -7,7 +9,7 @@ ROWS   = 80          # max years rendered
 COLS   = 52          # weeks per year
 BOX    = 15          # box size in pixels
 GAP    = 5           # gap between boxes
-CELL   = BOX + GAP   # 18 px per cell
+CELL   = BOX + GAP   # 20 px per cell
 YEAR_W = 30          # left column reserved for year labels
 CANVAS_WIDTH = YEAR_W + COLS * CELL + GAP
 
@@ -55,25 +57,26 @@ STONE         = "#af9980"
 PEBBLE        = "#ad9d8e"
 DARK_OLIVE    = "#8c8c76"
 
-DEFAULT_LABEL_COLOURS = [
-    (PAST_COLOR,   'Past'),
-    (NOW_COLOR,    'Current'),
-    (FUTURE_COLOR, 'Future')
-    ]
-
-CUSTOM_LABEL_COLOURS =[
-    (),
-    (),
-    (),
+PALETTE = [
+    RED, ORANGE, APRICOT, PEACH, POLLEN, FLASH_LIGHT, FLASH, GREEN, MINT,
+    TURQUOISE, LIGHT_BLUE, BLUE, ROYAL_BLUE, LILAC, MIST_BLUE, AZURE,
+    BLUE_COBALT, DARK_TEAL, DENIM_BLUE, MIDNIGHT_BLUE, OCEAN_BLUE, PURPLE,
+    ULTRA_VIOLET, LAVENDAR, PINK_SAND, LIGHT_PINK, PINK, ELECTRIC_PINK,
+    ROSE_RED, CAMELLIA, FLAMINGO, WALNUT, STONE, PEBBLE, DARK_OLIVE,
 ]
 
-# ── Font sizes ────────────────────────────────────────────────────────────
+DEFAULT_LABEL_COLOURS = [
+    (PAST_COLOR,  'Past'),
+    (NOW_COLOR,   'Current'),
+    (FUTURE_COLOR,'Future'),
+]
+
+# ── Font sizes ────────────────────────────────────────────────────────────────
 H1    = 42
 H2    = 33
 H3    = 26
 BODY  = 16
 LABEL = 13
-
 
 
 class App:
@@ -82,14 +85,21 @@ class App:
         self.root.title("4000 Weeks")
         self.root.configure(bg=BG)
         self._center(960, 540)
-        self.root.state("zoomed") # Make the window maximized.
+        self.root.state("zoomed")
+
+        # ── Runtime state ─────────────────────────────────────────
+        self._custom_labels: list[dict] = []      # [{name, color}, …]
+        self._week_labels:   dict[int, int] = {}  # week_num → label index
+
+        self._weeks_lived = 0
+        self._total_weeks = 0
+        self._dob         = None
+
         self._build_ui()
         self._refresh()
-
-        # Finalise scroll region after all widgets are laid out
         self.root.after(50, self._fix_scrollregion)
 
-    # ── Window setup ─────────────────────────────────────────────────────────
+    # ── Window setup ──────────────────────────────────────────────────────────
 
     def _center(self, w: int, h: int):
         sw, sh = self.get_screen_dims()
@@ -143,8 +153,6 @@ class App:
         frame = tk.Frame(self._content, width=CANVAS_WIDTH, height=80, bg=BG)
         frame.pack(pady=(22, 2))
         frame.pack_propagate(False)
-
-        # Heading
         tk.Label(frame, text="4000 Weeks", bg=BG, fg=TEXT_FG,
                  font=('Arial', H1, 'bold')).pack()
 
@@ -153,85 +161,128 @@ class App:
         frame.pack(pady=(6, 10))
         frame.pack_propagate(False)
 
-        # ── Input controls ────────────────────────────────────────
         tk.Label(frame, text="Born ", bg=BG, fg=TEXT_FG,
                  font=('Arial', BODY)).pack(side='left', padx=(0, 5))
-        
-        self.dob_var = tk.StringVar(value='1998-10-15')
 
-        # Birth date entry.
+        self.dob_var = tk.StringVar(value='1998-10-15')
         birthday_entry = tk.Entry(
-            frame,
-            textvariable     = self.dob_var,
-            bg               = FUTURE_COLOR,
-            fg               = TEXT_FG,
-            insertbackground = TEXT_FG,
-            relief           = 'flat',
-            font             = ('Arial', BODY),
-            width            = 0
-            )
-        
+            frame, textvariable=self.dob_var,
+            bg=FUTURE_COLOR, fg=TEXT_FG, insertbackground=TEXT_FG,
+            relief='flat', font=('Arial', BODY), width=0,
+        )
         birthday_entry.pack(side='left', padx=(0, 10), ipady=3, ipadx=5)
         birthday_entry.bind('<Return>', lambda _: self._refresh())
 
-        # Update button to refresh the grid based on the birth date.
         tk.Button(frame, text="Update", command=self._refresh,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
                   font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10)
-        
-        # Load button to import data from a saved json file
-        tk.Button(frame, text="Load", command=self._refresh,
-                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10, ipadx=10)
-        
-        # Save button to save data to json
-        tk.Button(frame, text="Save", command=self._refresh,
+
+        tk.Button(frame, text="Load", command=self.load_data,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
                   font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10, ipadx=10)
 
-        # ── Divider ───────────────────────────────────────────────
-        tk.Frame(frame, bg=BG, width=2, height=36).pack(
-            side='left', padx=24, fill="both", expand=True)
+        tk.Button(frame, text="Save", command=self.save_data,
+                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
+                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10, ipadx=10)
 
-        # ── Stats ─────────────────────────────────────────────────
+        # Spacer pushes stats to the right
+        tk.Frame(frame, bg=BG).pack(side='left', fill='both', expand=True)
+
         self._stat_vars: dict[str, tk.StringVar] = {}
         self.life_var = tk.StringVar(value='80')
-
         for key in ('Weeks lived', 'Weeks left', 'Years left', 'Life complete'):
             col = tk.Frame(frame, bg=BG)
             col.pack(side='left', padx=(30, 0))
-
             tk.Label(col, text=key, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(anchor='w')
-            
             v = tk.StringVar(value='—')
             self._stat_vars[key] = v
-
             tk.Label(col, textvariable=v, bg=BG, fg=TEXT_FG,
                      font=('Arial', BODY, 'bold')).pack(anchor='w')
 
     def _build_legend(self):
-        frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH, height=50)
-        frame.pack(pady=(0, 8))
-        frame.pack_propagate(False)
+        self._legend_frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH)
+        self._legend_frame.pack(pady=(0, 8))
+        self._label_name_var = tk.StringVar()
+        self._rebuild_legend()
 
+    def _rebuild_legend(self):
+        for widget in self._legend_frame.winfo_children():
+            widget.destroy()
 
+        # Default colour entries
         for color, label in DEFAULT_LABEL_COLOURS:
-            dot = tk.Canvas(frame, width=BOX, height=BOX, bg=BG, highlightthickness=0)
+            dot = tk.Canvas(self._legend_frame, width=BOX, height=BOX,
+                            bg=BG, highlightthickness=0)
             dot.create_rectangle(0, 0, BOX, BOX, fill=color, outline='')
             dot.pack(side='left', padx=(0, 5))
-
-            tk.Label(frame, text=label, bg=BG, fg=TEXT_FG,
+            tk.Label(self._legend_frame, text=label, bg=BG, fg=TEXT_FG,
                      font=('Arial', LABEL)).pack(side='left', padx=(0, 18))
-            
-        # ── Divider ───────────────────────────────────────────────
-        tk.Frame(frame, bg=FUTURE_COLOR, width=2, height=36).pack(
-            side='left', padx=(0, 18))
-        
-        # ── Custom Labels ─────────────────────────────────────────
-        tk.Button(frame, text="+", command=self._refresh,
+
+        # Custom label entries with × buttons
+        for idx, lbl in enumerate(self._custom_labels):
+            dot = tk.Canvas(self._legend_frame, width=BOX, height=BOX,
+                            bg=BG, highlightthickness=0)
+            dot.create_rectangle(0, 0, BOX, BOX, fill=lbl['color'], outline='')
+            dot.pack(side='left', padx=(0, 4))
+            tk.Label(self._legend_frame, text=lbl['name'], bg=BG, fg=TEXT_FG,
+                     font=('Arial', LABEL)).pack(side='left', padx=(0, 2))
+            tk.Button(self._legend_frame, text='×', bg=BG, fg=TEXT_FG,
+                      relief='flat', cursor='hand2', font=('Arial', LABEL),
+                      command=lambda i=idx: self._remove_custom_label(i),
+                      padx=2, pady=0).pack(side='left', padx=(0, 14))
+
+        # Divider
+        tk.Frame(self._legend_frame, bg=FUTURE_COLOR, width=2, height=18).pack(
+            side='left', padx=(0, 10))
+
+        # New label entry + add button
+        self._label_name_var.set('')
+        tk.Entry(self._legend_frame, textvariable=self._label_name_var,
+                 bg=FUTURE_COLOR, fg=TEXT_FG, insertbackground=TEXT_FG,
+                 relief='flat', font=('Arial', LABEL), width=12,
+                 ).pack(side='left', padx=(0, 6), ipady=2)
+
+        tk.Button(self._legend_frame, text='+', command=self._add_custom_label,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, "bold"), pady=0).pack(side='left', padx=10, ipadx=4)
+                  font=('Arial', LABEL, 'bold'), pady=0,
+                  ).pack(side='left', ipadx=4)
+
+        self._fix_scrollregion()
+
+    def _add_custom_label(self):
+        name = self._label_name_var.get().strip()
+        if not name:
+            return
+
+        used_colors = {lbl['color'].lower() for lbl in self._custom_labels}
+        used_colors |= {PAST_COLOR.lower(), NOW_COLOR.lower(), FUTURE_COLOR.lower()}
+        available = [c for c in PALETTE if c.lower() not in used_colors]
+        if not available:
+            messagebox.showwarning("No colours left",
+                                   "All palette colours are already in use.")
+            return
+
+        color = random.choice(available)
+        self._custom_labels.append({'name': name, 'color': color})
+        self._rebuild_legend()
+
+    def _remove_custom_label(self, idx: int):
+        # Reset any weeks that used this label
+        weeks_to_reset = [wn for wn, li in self._week_labels.items() if li == idx]
+        for wn in weeks_to_reset:
+            row, col = divmod(wn, COLS)
+            self.canvas.itemconfig(self._boxes[row][col], fill=PAST_COLOR)
+            del self._week_labels[wn]
+
+        # Shift down indices for labels above the removed one
+        self._week_labels = {
+            wn: (li - 1 if li > idx else li)
+            for wn, li in self._week_labels.items()
+        }
+
+        self._custom_labels.pop(idx)
+        self._rebuild_legend()
 
     def _build_grid(self):
         outer = tk.Frame(self._content, bg=BG)
@@ -247,18 +298,12 @@ class App:
         self._boxes: list[list[int]] = []
         for year in range(ROWS):
             y_top = GAP + year * CELL
-
-            # Create a label every 5 years
             if year % 5 == 0:
                 self.canvas.create_text(
-                    YEAR_W - 30,
-                    y_top + BOX // 2,
-                    text=str(year),
-                    anchor='w',
-                    fill=TEXT_FG,
-                    font=('Arial', LABEL),
+                    YEAR_W - 30, y_top + BOX // 2,
+                    text=str(year), anchor='w',
+                    fill=TEXT_FG, font=('Arial', LABEL),
                 )
-
             row: list[int] = []
             for week in range(COLS):
                 x1 = YEAR_W + GAP + week * CELL
@@ -273,8 +318,9 @@ class App:
                                                 fill=TEXT_FG, font=('Arial', LABEL),
                                                 state='hidden')
         self.canvas.tag_raise(self._tooltip)
-        self.canvas.bind('<Motion>', self._on_hover)
-        self.canvas.bind('<Leave>',  self._on_leave)
+        self.canvas.bind('<Motion>',   self._on_hover)
+        self.canvas.bind('<Leave>',    self._on_leave)
+        self.canvas.bind('<Button-1>', self._on_click)
 
     def _build_footer(self):
         f = tk.Frame(self._content, bg=BG)
@@ -307,10 +353,12 @@ class App:
         self._total_weeks = total_weeks
         self._dob         = dob
 
-        for year, row in enumerate(self._boxes):
-            for week, rect in enumerate(row):
+        for year, row_boxes in enumerate(self._boxes):
+            for week, rect in enumerate(row_boxes):
                 n = year * COLS + week
-                if n < weeks_lived - 1:
+                if n in self._week_labels:
+                    color = self._custom_labels[self._week_labels[n]]['color']
+                elif n < weeks_lived - 1:
                     color = PAST_COLOR
                 elif n == weeks_lived - 1:
                     color = NOW_COLOR
@@ -318,16 +366,42 @@ class App:
                     color = FUTURE_COLOR
                 self.canvas.itemconfig(rect, fill=color)
 
-    def load_data(self):
-        print("load data")
+    # ── Grid interaction ──────────────────────────────────────────────────────
 
-    def save_data(self):
-        print("save data")
+    def _on_click(self, event: tk.Event):
+        if not self._custom_labels:
+            return
+
+        cx = self.canvas.canvasx(event.x)
+        cy = self.canvas.canvasy(event.y)
+        gx = cx - YEAR_W - GAP
+        gy = cy - GAP
+        if gx < 0 or gy < 0:
+            return
+
+        col = int(gx // CELL)
+        row = int(gy // CELL)
+        if not (0 <= col < COLS and 0 <= row < ROWS):
+            return
+
+        week_num = row * COLS + col
+        if week_num >= self._weeks_lived - 1:
+            return  # only past weeks
+
+        current_idx = self._week_labels.get(week_num, -1)
+        next_idx    = current_idx + 1
+        rect        = self._boxes[row][col]
+
+        if next_idx >= len(self._custom_labels):
+            self._week_labels.pop(week_num, None)
+            self.canvas.itemconfig(rect, fill=PAST_COLOR)
+        else:
+            self._week_labels[week_num] = next_idx
+            self.canvas.itemconfig(rect, fill=self._custom_labels[next_idx]['color'])
 
     def _on_hover(self, event: tk.Event):
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
-
         gx = cx - YEAR_W - GAP
         gy = cy - GAP
         if gx < 0 or gy < 0:
@@ -336,16 +410,17 @@ class App:
 
         col = int(gx // CELL)
         row = int(gy // CELL)
-
         if not (0 <= col < COLS and 0 <= row < ROWS):
             self.canvas.itemconfig(self._tooltip, state='hidden')
             return
 
-        week_num   = row * COLS + col
+        week_num = row * COLS + col
         try:
             week_start = self._dob + timedelta(weeks=week_num)
             tip = f'Age {row}y w{col + 1}  ·  ~{week_start.strftime("%b %Y")}'
-        except AttributeError:
+            if week_num in self._week_labels:
+                tip += f'  ·  {self._custom_labels[self._week_labels[week_num]]["name"]}'
+        except (AttributeError, TypeError):
             tip = f'Year {row}, week {col + 1}'
 
         self.canvas.coords(self._tooltip, cx + 12, cy + 12)
@@ -354,6 +429,46 @@ class App:
 
     def _on_leave(self, _=None):
         self.canvas.itemconfig(self._tooltip, state='hidden')
+
+    # ── Save / Load ───────────────────────────────────────────────────────────
+
+    def save_data(self):
+        path = filedialog.asksaveasfilename(
+            defaultextension='.json',
+            filetypes=[('JSON files', '*.json'), ('All files', '*.*')],
+            title='Save visualisation',
+        )
+        if not path:
+            return
+
+        payload = {
+            'birthdate':       self.dob_var.get().strip(),
+            'life_expectancy': self.life_var.get().strip(),
+            'custom_labels':   self._custom_labels,
+            'week_labels':     {str(k): v for k, v in self._week_labels.items()},
+        }
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(payload, f, indent=2)
+
+    def load_data(self):
+        path = filedialog.askopenfilename(
+            filetypes=[('JSON files', '*.json'), ('All files', '*.*')],
+            title='Load visualisation',
+        )
+        if not path:
+            return
+
+        with open(path, 'r', encoding='utf-8') as f:
+            payload = json.load(f)
+
+        self.dob_var.set(payload.get('birthdate', ''))
+        self.life_var.set(payload.get('life_expectancy', '80'))
+        self._custom_labels = payload.get('custom_labels', [])
+        self._week_labels   = {int(k): v for k, v in
+                               payload.get('week_labels', {}).items()}
+
+        self._rebuild_legend()
+        self._refresh()
 
 
 def main():
