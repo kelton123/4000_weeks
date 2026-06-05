@@ -407,9 +407,26 @@ class App:
 
             self._boxes.append(row)
 
-        self._tooltip = self.canvas.create_text(0, 0, text='', anchor='nw',
-                                                fill=TEXT_FG, font=('Arial', LABEL),
-                                                state='hidden')
+        self._tooltip_bg = self.canvas.create_rectangle(
+            0,
+            0,
+            1,
+            1,
+            fill    = BG,
+            outline = '',
+            state   = 'hidden'
+            )
+        
+        self._tooltip = self.canvas.create_text(
+            0,
+            0,
+            text   = '',
+            anchor = 'nw',
+            fill   = TEXT_FG,
+            font   = ('Arial', BODY),
+            state  = 'hidden'
+            )
+        
         self.canvas.tag_raise(self._tooltip)
         self.canvas.bind('<Motion>',   self._on_hover)
         self.canvas.bind('<Leave>',    self._on_leave)
@@ -504,29 +521,39 @@ class App:
         gy = cy - GAP
         if gx < 0 or gy < 0:
             self.canvas.itemconfig(self._tooltip, state='hidden')
+            self.canvas.itemconfig(self._tooltip_bg, state='hidden')
             return
 
         col = int(gx // CELL)
         row = int(gy // CELL)
         if not (0 <= col < COLS and 0 <= row < ROWS):
             self.canvas.itemconfig(self._tooltip, state='hidden')
+            self.canvas.itemconfig(self._tooltip_bg, state='hidden')
             return
 
         week_num = row * COLS + col
         try:
             week_start = self._dob + timedelta(weeks=week_num)
-            tip = f'Age {row}y w{col + 1}  ·  ~{week_start.strftime("%b %Y")}'
+            tip = f'{row} years & {col + 1} weeks\n{week_start.strftime("%b %Y")}'
             if week_num in self._week_labels:
-                tip += f'  ·  {self._custom_labels[self._week_labels[week_num]]["name"]}'
+                tip += f'\n{self._custom_labels[self._week_labels[week_num]]["name"]}'
         except (AttributeError, TypeError):
             tip = f'Year {row}, week {col + 1}'
 
-        self.canvas.coords(self._tooltip, cx + 12, cy + 12)
+        self.canvas.coords(self._tooltip, cx + 16, cy + 14)
         self.canvas.itemconfig(self._tooltip, text=tip, state='normal')
+        bbox = self.canvas.bbox(self._tooltip)
+        if bbox:
+            self.canvas.coords(self._tooltip_bg,
+                               bbox[0] - 6, bbox[1] - 4,
+                               bbox[2] + 6, bbox[3] + 4)
+        self.canvas.itemconfig(self._tooltip_bg, state='normal')
+        self.canvas.tag_raise(self._tooltip_bg)
         self.canvas.tag_raise(self._tooltip)
 
     def _on_leave(self, _=None):
         self.canvas.itemconfig(self._tooltip, state='hidden')
+        self.canvas.itemconfig(self._tooltip_bg, state='hidden')
 
     # ── Save / Load ───────────────────────────────────────────────────────────
 
