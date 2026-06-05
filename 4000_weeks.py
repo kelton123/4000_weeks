@@ -535,9 +535,16 @@ class App:
         try:
             week_start = self._dob + timedelta(weeks=week_num)
             tip = f'{row} years & {col + 1} weeks\n{week_start.strftime("%b %Y")}'
+            custom_label_background_fill = BG
+            
             if week_num in self._week_labels:
                 tip += f'\n{self._custom_labels[self._week_labels[week_num]]["name"]}'
-        except (AttributeError, TypeError):
+
+                custom_label_background_fill = self._custom_labels[self._week_labels[week_num]]["color"]
+            
+            self.canvas.itemconfig(self._tooltip_bg, fill= custom_label_background_fill)
+        except (AttributeError, TypeError) as e:
+            print(e)
             tip = f'Year {row}, week {col + 1}'
 
         self.canvas.coords(self._tooltip, cx + 16, cy + 14)
