@@ -362,28 +362,37 @@ class App:
 
         self._boxes: list[list[int]] = []
         self.years_labels = []
+
         for year in range(ROWS):
             y_top = GAP + year * CELL
+
+            # Create the delta year label.
             if year % 5 == 0:
                 self.canvas.create_text(
-                    YEAR_W - 30, y_top + BOX // 2,
-                    text=str(year), anchor='w',
-                    fill=TEXT_FG, font=('Arial', LABEL),
+                    YEAR_W - 30,
+                    y_top + BOX // 2,
+                    text=str(year),
+                    anchor='w',
+                    fill=TEXT_FG,
+                    font=('Arial', LABEL)
                 )
 
+            # Create the row of week boxes.
             row: list[int] = []
-
             for week in range(COLS):
                 x1 = YEAR_W + GAP + week * CELL
                 rect = self.canvas.create_rectangle(
-                    x1, y_top, x1 + BOX, y_top + BOX,
-                    fill=FUTURE_COLOR, outline='',
+                    x1,
+                    y_top,
+                    x1 + BOX,
+                    y_top + BOX,
+                    fill=FUTURE_COLOR,
+                    outline=''
                 )
                 row.append(rect)
             
             # Add the year to the right of the grid
             birth_year = int(self.dob_var.get()[0:4])
-            
             if year % 5 == 0:
                 year_label = self.canvas.create_text(
                     CANVAS_WIDTH -  50,
