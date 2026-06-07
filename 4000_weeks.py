@@ -565,12 +565,12 @@ class App:
         row, col = divmod(week_num, COLS)
         try:
             week_start = self._dob + timedelta(weeks=week_num)
-            header = f'{row} years & {col + 1} weeks  ·  {week_start.strftime("%b %Y")}'
+            header = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
-            header = f'Year {row}, week {col + 1}'
+            header = f'{row} years & {col + 1} weeks'
 
         note        = self._week_notes.get(week_num)
-        has_note    = bool(note and (note.get('description') or note.get('image_path')))
+        has_note    = self._has_note_data(note)
         label_entry = (self._custom_labels[self._week_labels[week_num]]
                        if week_num in self._week_labels else None)
 
@@ -582,7 +582,7 @@ class App:
         pad = 10
 
         tk.Label(win, text=header, bg=BG, fg=TEXT_FG,
-                 font=('Arial', LABEL)).pack(anchor='w', padx=pad, pady=(pad, 2))
+                 font=('Arial', BODY)).pack(anchor='w', padx=pad, pady=(pad, 2))
 
         if label_entry:
             lf = tk.Frame(win, bg=BG)
@@ -591,7 +591,7 @@ class App:
             dot.create_rectangle(0, 0, 10, 10, fill=label_entry['color'], outline='')
             dot.pack(side='left', padx=(0, 5))
             tk.Label(lf, text=label_entry['name'], bg=BG, fg=TEXT_FG,
-                     font=('Arial', LABEL)).pack(side='left')
+                     font=('Arial', BODY)).pack(side='left')
 
         if has_note:
             body = tk.Frame(win, bg=BG)
@@ -602,7 +602,7 @@ class App:
                 if week_num not in self._photo_cache:
                     try:
                         img = Image.open(img_path)
-                        img.thumbnail((120, 80))
+                        img.thumbnail((300, 180))
                         self._photo_cache[week_num] = ImageTk.PhotoImage(img)
                     except Exception:
                         pass
@@ -613,7 +613,7 @@ class App:
             desc = note.get('description', '').strip()
             if desc:
                 tk.Label(body, text=desc, bg=BG, fg=TEXT_FG,
-                         font=('Arial', LABEL), wraplength=220,
+                         font=('Arial', BODY), wraplength=220,
                          justify='left').pack(side='left', anchor='n')
         else:
             tk.Frame(win, bg=BG, height=pad).pack()
@@ -632,6 +632,9 @@ class App:
 
     # ── Note dialog ───────────────────────────────────────────────────────────
 
+    def _has_note_data(self, note) -> bool:
+        return bool(note and (note.get('description') or note.get('image_path')))
+    
     def _open_note_dialog(self, week_num: int):
         self._hide_tooltip()
         existing = self._week_notes.get(week_num, {})
@@ -639,9 +642,9 @@ class App:
         row, col = divmod(week_num, COLS)
         try:
             week_start = self._dob + timedelta(weeks=week_num)
-            title_text = f'Week note  ·  Age {row}y w{col + 1}  ·  {week_start.strftime("%b %Y")}'
+            title_text = f'Week note | {row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
-            title_text = f'Week note  ·  Year {row}, week {col + 1}'
+            title_text = f'Week note | {row} years & {col + 1} weeks'
 
         dlg = tk.Toplevel(self.root)
         dlg.title('Week Note')
