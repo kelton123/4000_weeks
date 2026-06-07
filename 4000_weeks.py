@@ -83,24 +83,52 @@ BODY  = 16
 LABEL = 13
 
 class Week_Cell:
-    def __init__(self, week_number, label, colour, rectangle, image_path = "", description = ""):
-        self.week_number = week_number
+    def __init__(
+            self,
+            id          :int,
+            year        :int,
+            week        :int,
+            label       :str,
+            colour      :str,
+            rectangle,
+            image_path  = "",
+            description = ""):
+        
+        self.id = id
+        self.year        = year
+        self.week        = week
         self.label       = label
         self.colour      = colour
         self.cell        = rectangle
         
         # Optional metadata which is added by the user.
-        self.image_path
-        self.description
+        self.image_path  = image_path
+        self.description = description
         
         # Getter for week_number
         @property
-        def week_number(self):
+        def id(self):
             return self._week_number
         
-        @week_number.setter
-        def week_number(self, number :int):
+        @id.setter
+        def id(self, number :int):
             self._week_number = number
+
+        @property
+        def year(self):
+            return self._year
+        
+        @year.setter
+        def year(self, year_value :int):
+            self._year = year_value
+
+        @property
+        def week(self):
+            return self._week
+        
+        @week.setter
+        def week(self, week_value :int):
+            self._week = week_value
 
         @property
         def label(self):
@@ -439,8 +467,9 @@ class App:
                     fill=FUTURE_COLOR,
                     outline=''
                 )
-                cell = Week_Cell(week, "past", FUTURE_COLOR, rect)
+                cell = Week_Cell((year + week), year, week, "past", FUTURE_COLOR, rect)
                 self.week_cells.append(cell)
+                
                 row.append(rect)
             
             # Add the year to the right of the grid
@@ -616,7 +645,7 @@ class App:
             header = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
             header = f'{row} years & {col + 1} weeks'
-        
+
         note        = self._week_notes.get(week_num)
         has_note    = self._has_note_data(note)
         label_entry = (self._custom_labels[self._week_labels[week_num]]
