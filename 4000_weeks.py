@@ -82,6 +82,50 @@ H3    = 26
 BODY  = 16
 LABEL = 13
 
+class Week_Cell:
+    def __init__(self, week_number, label, colour, rectangle, image_path = "", description = ""):
+        self.week_number = week_number
+        self.label       = label
+        self.colour      = colour
+        self.cell        = rectangle
+        
+        # Optional metadata which is added by the user.
+        self.image_path
+        self.description
+        
+        # Getter for week_number
+        @property
+        def week_number(self):
+            return self._week_number
+        
+        @week_number.setter
+        def week_number(self, number :int):
+            self._week_number = number
+
+        @property
+        def label(self):
+            return self._label
+        
+        @label.setter
+        def label(self, label_type :str):
+            self._label = label_type
+        
+        @property
+        def colour(self):
+            return self._colour
+        
+        @colour.setter
+        def colour(self, colour_value :str):
+            self._colour = colour_value
+
+        @property
+        def rectangle(self):
+            return self._rectangle
+        
+        @rectangle.setter
+        def rectangle(self, canvas_rect):
+            self._rectangle = canvas_rect
+
 
 class App:
     def __init__(self, root: tk.Tk):
@@ -92,10 +136,11 @@ class App:
         self.root.state("zoomed")
 
         # ── Runtime state ─────────────────────────────────────────
-        self._custom_labels: list[dict]             = []   # [{name, color}, …]
-        self._week_labels:   dict[int, int]         = {}   # week_num → label index
-        self._week_notes:    dict[int, dict]        = {}   # week_num → {description, image_path}
-        self._photo_cache:   dict[int, ImageTk.PhotoImage] = {}  # keeps refs alive
+        self._custom_labels : list[dict]                    = []   # [{name, color}, …]
+        self._week_labels   : dict[int, int]                = {}   # week_num → label index
+        self._week_notes    : dict[int, dict]               = {}   # week_num → {description, image_path}
+        self._photo_cache   : dict[int, ImageTk.PhotoImage] = {}  # keeps refs alive
+        self.week_cells     : list[Week_Cell]               = []
 
         self._weeks_lived   = 0
         self._total_weeks   = 0
@@ -394,6 +439,8 @@ class App:
                     fill=FUTURE_COLOR,
                     outline=''
                 )
+                cell = Week_Cell(week, "past", FUTURE_COLOR, rect)
+                self.week_cells.append(cell)
                 row.append(rect)
             
             # Add the year to the right of the grid
@@ -526,6 +573,7 @@ class App:
         if week_num >= self._weeks_lived - 1:
             return
 
+        # Only allow notes on cells with a custom label.
         self._open_note_dialog(week_num)
 
     def _on_hover(self, event: tk.Event):
@@ -568,7 +616,7 @@ class App:
             header = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
             header = f'{row} years & {col + 1} weeks'
-
+        
         note        = self._week_notes.get(week_num)
         has_note    = self._has_note_data(note)
         label_entry = (self._custom_labels[self._week_labels[week_num]]
