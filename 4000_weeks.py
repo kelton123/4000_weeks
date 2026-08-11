@@ -469,7 +469,7 @@ class App:
                 )
                 cell = Week_Cell((year + week), year, week, "past", FUTURE_COLOR, rect)
                 self.week_cells.append(cell)
-                
+                    
                 row.append(rect)
             
             # Add the year to the right of the grid
