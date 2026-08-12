@@ -257,7 +257,7 @@ class App:
         # Build all of the sub-sections
         self._build_header()
         self._build_controls()
-        self._build_legend()
+        # self._build_legend()
         self._build_grid()
         self._build_footer()
 
@@ -313,50 +313,67 @@ class App:
         # align the buttons and right align the stats.
         frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH, height=100)
         frame.pack(pady=(6, 10))
-        frame.pack_propagate(False)
 
-        tk.Label(frame, text="Born ", bg=BG, fg=TEXT_FG, font=('Arial', BODY)).pack(side='left', padx=(0, 5))
-        self.dob_var = tk.StringVar(value='1998-10-15') # Default birthday
+        # Default birthday value.
+        self.dob_var = tk.StringVar(value='1998-10-15')
 
-        birthday_entry = tk.Entry(
-            frame,
-            textvariable     = self.dob_var,
-            bg               = FUTURE_COLOR,
-            fg               = TEXT_FG,
-            insertbackground = TEXT_FG,
-            relief           = 'flat',
-            font             = ('Arial', BODY),
-            width            = 0,
-        )
-        birthday_entry.pack(side='left', padx=(0, 10), ipady=3, ipadx=5)
-        birthday_entry.bind('<Return>', lambda _: self._refresh())
+        # Frame for the tools.
+        tool_frame = tk.Frame(frame, bg=BG, height=40, width=CANVAS_WIDTH)
+        tool_frame.pack(anchor='center', fill='x')
 
-        tk.Button(frame, text="Update", command=self._refresh,
+        # Open file button to load a visualisation from a file.
+        tk.Button(tool_frame, text="Load", command=self.load_data,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10)
+                  font=('Arial', LABEL, 'bold'), pady=2).grid(row=0, column=0, padx=20, ipadx=10)
 
-        tk.Button(frame, text="Load", command=self.load_data,
+        # Save the current visualisation with all of the metadata to a file.
+        tk.Button(tool_frame, text="Save", command=self.save_data,
                   bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10, ipadx=10)
+                  font=('Arial', LABEL, 'bold'), pady=2).grid(row=0, column=1, padx=20, ipadx=10)
 
-        tk.Button(frame, text="Save", command=self.save_data,
-                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).pack(side='left', padx=10, ipadx=10)
+        # Light and dark mode toggle.
+        tk.Button(
+            tool_frame,
+            text="Light",
+            bg=FUTURE_COLOR,
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            font=('Arial', LABEL, 'bold'),
+            pady=2).grid(row=0, column=2, padx=20, ipadx=10)
 
         # Spacer pushes stats to the right
-        tk.Frame(frame, bg=BG).pack(side='left', fill='both', expand=True)
+        tk.Frame(frame, bg=BG, height=100).pack(side='left', fill='both', expand=True)
 
+        # Stats about the 4000 weeks visualisation. 
         self._stat_vars: dict[str, tk.StringVar] = {}
+
+        # The lifespace that is used to generate the grid.
         self.life_var = tk.StringVar(value='80')
-        for key in ('Weeks lived', 'Weeks left', 'Years left', 'Life complete'):
-            col = tk.Frame(frame, bg=BG)
-            col.pack(side='left', padx=(30, 0))
-            tk.Label(col, text=key, bg=BG, fg=TEXT_FG,
-                     font=('Arial', LABEL)).pack(anchor='w')
+
+        stats_frame = tk.Frame(frame, bg=BG)
+        stats_frame.pack(fill="both", expand=True)
+
+        for i, key in enumerate(('Weeks Lived', 'Years Remaining', 'Life Complete')):
+            tk.Label(
+                stats_frame,
+                text=key,
+                bg=BG,
+                fg=TEXT_FG,
+                font=('Arial', LABEL)
+                ).grid(row=0, column=i, padx=40)
+            
             v = tk.StringVar(value='—')
+
             self._stat_vars[key] = v
-            tk.Label(col, textvariable=v, bg=BG, fg=TEXT_FG,
-                     font=('Arial', BODY, 'bold')).pack(anchor='w')
+
+            tk.Label(
+                stats_frame,
+                textvariable=v,
+                bg=BG,
+                fg=TEXT_FG,
+                font=('Arial', BODY, 'bold')
+                ).grid(row=1, column=i, padx=40)
 
     def _build_legend(self):
         self._legend_frame = tk.Frame(self._content, bg= BG, width= CANVAS_WIDTH, height= 40)
@@ -524,10 +541,9 @@ class App:
         years_left  = round(remaining / 52, 1)
         pct         = min(100.0, round(weeks_lived / total_weeks * 100, 1))
 
-        self._stat_vars['Weeks lived'].set(f'{weeks_lived:,}')
-        self._stat_vars['Weeks left'].set(f'{remaining:,}')
-        self._stat_vars['Years left'].set(str(years_left))
-        self._stat_vars['Life complete'].set(f'{pct}%')
+        self._stat_vars['Weeks Lived'].set(f'{weeks_lived:,}')
+        self._stat_vars['Years Remaining'].set(str(years_left))
+        self._stat_vars['Life Complete'].set(f'{pct}%')
 
         self._weeks_lived = weeks_lived
         self._total_weeks = total_weeks
