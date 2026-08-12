@@ -875,7 +875,7 @@ class App:
         popup = self.create_popup(self.root, "Update Birthday", 350, 110)
 
         # Create a label for what the user has to input.
-        lbl_name = tk.Label(popup, text="Birthday:", font=("futura-book", 12))
+        lbl_name = tk.Label(popup, text="Birthday DD-MM-YYYY:", font=("futura-book", 12))
         lbl_name.grid(row=0, column=0, sticky="w", pady=(0,20))
 
         # Create an entry widget 
@@ -896,6 +896,8 @@ class App:
             # Update birthday label
             try:
                 self.birthday.config(text=birthday)
+                self.dob_var.set(birthday)
+                self._refresh()
             except ValueError:
                 messagebox.showwarning("Warning", "Could not update birthday, please try again.", parent=self.root)
                 return
