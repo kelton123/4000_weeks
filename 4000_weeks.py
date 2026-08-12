@@ -20,7 +20,7 @@ CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W + YEAR_W
 # ── Colour palette ────────────────────────────────────────────────────────────
 BG            = '#121212'
 PAST_COLOR    = '#8e8e93'
-NOW_COLOR     = '#ffd500'
+NOW_COLOR     = '#ffffff'
 FUTURE_COLOR  = '#3a3a3c'
 TEXT_FG       = '#f2f2f7'
 
@@ -76,11 +76,15 @@ DEFAULT_LABEL_COLOURS = [
 ]
 
 # ── Font sizes ────────────────────────────────────────────────────────────────
-H1    = 42
-H2    = 33
-H3    = 26
-BODY  = 16
-LABEL = 13
+H1    = ('Arial', 42, 'bold')
+H2    = 33 #('Arial', 33, 'bold')
+H3    = 26 # ('Arial', 26, 'bold')
+BODY  = 16 #('Arial', 16, 'bold')
+LABEL = 13 #('Arial', 13, 'bold')
+
+
+
+# ── Week Cell Widget ────────────────────────────────────────────────────────────
 
 class Week_Cell:
     def __init__(
@@ -274,7 +278,9 @@ class App:
 
     def _build_header(self):
         '''
-        The header section with the program title 4000 Weeks text widget.
+        The header section with the year that the grid is working with. This label can be clicked to
+        launch a popup which enables a different date to be entered. However, this will delete all metadata
+        in the project unless saved.
 
         @param  : N/A
         @return : N/A
@@ -286,8 +292,12 @@ class App:
         frame.pack(pady=(22, 2))
         frame.pack_propagate(False)
 
-        # The program header.
-        tk.Label(frame, text="4000 Weeks", bg=BG, fg=TEXT_FG, font=('Arial', H1, 'bold')).pack()
+        # The active birthday - default text is "Add birthday".
+        self.birthday = tk.Label(frame, text="Add birthday", bg=BG, fg=TEXT_FG, font=H1)
+        self.birthday.pack()
+
+        # Bind clicking the birthday label to allow a new date to be visualised.
+        self.birthday.bind("<Button-1>", lambda event: self.open_birthday_popup())
 
     def _build_controls(self):
         '''
@@ -817,6 +827,108 @@ class App:
         tk.Button(btn_row, text='Cancel', command=dlg.destroy,
                   bg=FUTURE_COLOR, fg=TEXT_FG, relief='flat', cursor='hand2',
                   font=('Arial', LABEL), padx=14).pack(side='left')
+
+    # ── Update Birthday ───────────────────────────────────────────────────────────
+
+    def centre_launch_popup(self, root_window, popup_window, window_width, window_height):
+        # Get the current position of the window
+        root_x = root_window.winfo_x()
+        root_y = root_window.winfo_y()
+
+        # Get the current window width and height
+        root_width = root_window.winfo_width()
+        root_height = root_window.winfo_height()
+        
+        # Calculate the exact offsets to center the popup
+        x_coord = int(root_x + (root_width - window_width) / 2)
+        y_coord = int(root_y + (root_height - window_height) / 2)
+        
+        # Apply the geometry string (coordinates must be integers)
+        popup_window.geometry(f"{window_width}x{window_height}+{x_coord}+{y_coord}")
+
+    def create_popup(self, parent_widget, title="", width=260, height=150):
+        '''
+        Create a popup above the main window in the center.
+        '''
+        main_window = parent_widget.winfo_toplevel()
+
+        popup = tk.Toplevel(main_window)
+        popup.title(title)
+        popup.resizable(False, False)
+        popup.config(padx=15, pady=15)
+
+        # Launch the popup in the centre of the root window.
+        self.centre_launch_popup(main_window, popup, width, height)
+        
+        # Make the popup modal (blocks interaction with main window)
+        popup.transient(parent_widget)   
+        popup.grab_set()
+
+        return popup
+
+
+    def open_birthday_popup(self, event=None):
+        '''
+        When the user clicks on the birthday label, open a popup where the
+        user can type a new birthday date to visualise.
+        '''
+        popup = self.create_popup(self.root, "Update Birthday", 350, 110)
+
+        # Create a label for what the user has to input.
+        lbl_name = tk.Label(popup, text="Birthday:", font=("futura-book", 12))
+        lbl_name.grid(row=0, column=0, sticky="w", pady=(0,20))
+
+        # Create an entry widget 
+        ent_name = tk.Entry(popup, font=("futura-book", 14))
+        ent_name.grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=(0,20))
+        ent_name.focus_set()
+
+        # If the user confirms try and update the swatch label
+        def update_name(event=None):
+            birthday = ent_name.get().strip()
+            if not birthday:
+                messagebox.showwarning("Warning", "Please enter a project name!", parent=popup)
+                return
+            
+            # TODO: Validate birthday
+            
+
+            # Update birthday label
+            try:
+                self.birthday.config(text=birthday)
+            except ValueError:
+                messagebox.showwarning("Warning", "Could not update birthday, please try again.", parent=self.root)
+                return
+                
+            popup.destroy()
+        
+        def close_popup(self):
+            popup.destroy()
+
+        # Create confirm and quit buttons
+        btn_frame = tk.Frame(popup)
+        btn_frame.grid(row=1, column=0, columnspan=2, sticky="ew")
+        btn_frame.columnconfigure(0, weight=1)
+
+        btn_close = tk.Button(
+            btn_frame,
+            text                = "Cancel",
+            font                = ("futura-book", 12),
+            command             = popup.destroy
+            )
+        btn_close.grid(row=0, column=1, padx=(0,5))
+
+        btn_create = tk.Button(
+            btn_frame,
+            text                = "Update",
+            font                = ("futura-book", 12),
+            command             = update_name
+            )
+        btn_create.grid(row=0, column=2, padx=(5,0))
+
+        # Bind keyboard inputs
+        popup.bind("<Escape>", close_popup)
+        popup.bind("<Return>", update_name)
 
     # ── Save / Load ───────────────────────────────────────────────────────────
 
