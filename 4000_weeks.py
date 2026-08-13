@@ -319,20 +319,37 @@ class App:
 
         # Frame for the tools.
         tool_frame = tk.Frame(frame, bg=BG, height=40, width=CANVAS_WIDTH)
-        tool_frame.pack(anchor='center', fill='x')
+        tool_frame.pack(anchor='center', fill='x', expand=True)
+        tool_frame.columnconfigure([0,4], weight=3)
 
         # Open file button to load a visualisation from a file.
-        tk.Button(tool_frame, text="Load", command=self.load_data,
-                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).grid(row=0, column=0, padx=20, ipadx=10)
+        open_button = tk.Button(
+            tool_frame,
+            text="Load",
+            command=self.load_data,
+            bg=FUTURE_COLOR,
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            font=('Arial', LABEL, 'bold'),
+            pady=2)
+        open_button.grid(row=0, column=1, padx=20, ipadx=10)
 
         # Save the current visualisation with all of the metadata to a file.
-        tk.Button(tool_frame, text="Save", command=self.save_data,
-                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=2).grid(row=0, column=1, padx=20, ipadx=10)
+        save_button = tk.Button(
+            tool_frame,
+            text="Save",
+            command=self.save_data,
+            bg=FUTURE_COLOR,
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            font=('Arial', LABEL, 'bold'),
+            pady=2)
+        save_button.grid(row=0, column=2, padx=20, ipadx=10)
 
         # Light and dark mode toggle.
-        tk.Button(
+        theme_button = tk.Button(
             tool_frame,
             text="Light",
             bg=FUTURE_COLOR,
@@ -340,10 +357,11 @@ class App:
             relief='flat',
             cursor='hand2',
             font=('Arial', LABEL, 'bold'),
-            pady=2).grid(row=0, column=2, padx=20, ipadx=10)
+            pady=2)
+        theme_button.grid(row=0, column=3, padx=20, ipadx=10)
 
         # Spacer pushes stats to the right
-        tk.Frame(frame, bg=BG, height=100).pack(side='left', fill='both', expand=True)
+        tk.Frame(frame, bg=BG, height=100).pack(anchor='center', fill='both', expand=True)
 
         # Stats about the 4000 weeks visualisation. 
         self._stat_vars: dict[str, tk.StringVar] = {}
