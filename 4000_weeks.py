@@ -6,7 +6,7 @@ import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from datetime import date, timedelta
 
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps
 
 # ── Grid constants ────────────────────────────────────────────────────────────
 ROWS          = 81          # max years rendered
@@ -805,74 +805,128 @@ class App:
 
         self.popup_widgets.append(img_row)
 
-        img_row.columnconfigure((0,1,2), weight=1)
+        img_row.columnconfigure((0, 1, 2), weight=1)
+        img_row.rowconfigure((0, 1), weight=1)
 
         row_height = 80
 
+        # Create the 4 Canvas Preview widgets
         preview = tk.Canvas(
             img_row,
             bg=FUTURE_COLOR,
             width=1,
             height=row_height * 2,
             highlightthickness=0
-            )
-        preview.grid(row=0, column=0, rowspan=2, padx=(0,5), sticky="nsew")
+        )
+        preview.grid(row=0, column=0, rowspan=2, padx=(0, 5), sticky="nsew")
 
         preview_1 = tk.Canvas(
-                    img_row,
-                    bg=FUTURE_COLOR,
-                    height=row_height * 2,
-                    width=1,
-                    highlightthickness=0
-                    )
-        preview_1.grid(row=0, column=1, padx=5, rowspan=2, sticky="nsew")
+            img_row,
+            bg=FUTURE_COLOR,
+            width=1,
+            height=row_height * 2,
+            highlightthickness=0
+        )
+        preview_1.grid(row=0, column=1, rowspan=2, padx=5, sticky="nsew")
 
         preview_2 = tk.Canvas(
-                    img_row,
-                    bg=FUTURE_COLOR,
-                    height=row_height,
-                    width=1,
-                    highlightthickness=0
-                    )
-        preview_2.grid(row=0, column=2, padx=(5,0), pady=(0,5), sticky="nsew")
+            img_row,
+            bg=FUTURE_COLOR,
+            width=1,
+            height=row_height,
+            highlightthickness=0
+        )
+        preview_2.grid(row=0, column=2, padx=(5, 0), pady=(0, 5), sticky="nsew")
 
         preview_3 = tk.Canvas(
-                    img_row,
-                    bg=FUTURE_COLOR,
-                    height=row_height,
-                    width=1,
-                    highlightthickness=0
-                    )
-        preview_3.grid(row=1, column=2, padx=(5,0), pady=(5,0), sticky="nsew")
+            img_row,
+            bg=FUTURE_COLOR,
+            width=1,
+            height=row_height,
+            highlightthickness=0
+        )
+        preview_3.grid(row=1, column=2, padx=(5, 0), pady=(5, 0), sticky="nsew")
 
-        chosen_path  = [existing.get('image_path')]
-        photo_ref    = [None]
+        # Store canvases in a list for clean iteration
+        canvases = [preview, preview_1, preview_2, preview_3]
+
+        # Normalize existing image path(s) into a list of up to 4 paths
+        raw_paths = existing.get('image_paths') or existing.get('image_path') or []
+        if isinstance(raw_paths, str):
+            chosen_paths = [raw_paths]
+        else:
+            chosen_paths = list(raw_paths)[:4]
+
+        photo_refs = [None] * 4
         filename_var = tk.StringVar()
 
-        def _load_preview(path):
-            preview.delete('all')
-            if not path or not os.path.isfile(path):
-                filename_var.set('')
-                return
-            try:
-                img = Image.open(path)
-                img.thumbnail((120, 80))
-                photo_ref[0] = ImageTk.PhotoImage(img)
-                preview.create_image(60, 40, image=photo_ref[0], anchor='center')
-                filename_var.set(os.path.basename(path))
-            except Exception:
-                filename_var.set('(could not load image)')
 
-        _load_preview(chosen_path[0])
+        def _load_previews():
+            """Renders images onto the 4 canvases, filling each canvas completely (object-fit: cover)."""
+            img_row.update_idletasks()  # Forces Tkinter to compute real canvas pixel sizes
+
+            for i, c in enumerate(canvases):
+                c.delete('all')
+                photo_refs[i] = None
+                c.image = None
+
+                if i < len(chosen_paths):
+                    path = chosen_paths[i]
+                    if path and os.path.isfile(path):
+                        try:
+                            cw = c.winfo_width()
+                            ch = c.winfo_height()
+
+                            # Fallbacks if called before canvas geometry finishes rendering
+                            if cw <= 1 or ch <= 1:
+                                cw = 120
+                                ch = row_height * 2 if i < 2 else row_height
+
+                            img = Image.open(path)
+
+                            # ImageOps.fit scales and crops the image to fill (cw, ch) completely
+                            # centering=(0.5, 0.5) crops equally from edges (centered)
+                            fitted_img = ImageOps.fit(
+                                img, 
+                                (cw, ch), 
+                                method=Image.Resampling.LANCZOS, 
+                                centering=(0.5, 0.5)
+                            )
+
+                            photo = ImageTk.PhotoImage(fitted_img)
+                            photo_refs[i] = photo
+                            c.image = photo  # Prevent Garbage Collection
+
+                            # Place image at canvas center
+                            c.create_image(cw // 2, ch // 2, image=photo, anchor='center')
+                        except Exception:
+                            pass
+
+            # Update status summary variable
+            if chosen_paths:
+                filename_var.set(f"{len(chosen_paths)} image(s) selected")
+            else:
+                filename_var.set('')
+
 
         def _pick_image():
-            p = filedialog.askopenfilename(
-                parent=self.week_note_popup, title='Choose image',
-                filetypes=[('Images', '*.jpg *.jpeg *.png *.webp *.gif *.bmp'),
-                           ('All files', '*.*')])
-            if p:
-                chosen_path[0] = p
-                _load_preview(p)
+            """Opens file dialog and updates image paths (max 4)."""
+            image_paths = filedialog.askopenfilenames(
+                parent=self.week_note_popup,
+                title='Choose up to 4 images',
+                filetypes=[
+                    ('Images', '*.jpg *.jpeg *.png *.webp *.gif *.bmp'),
+                    ('All files', '*.*')
+                ]
+            )
+            if image_paths:
+                chosen_paths.clear()
+                chosen_paths.extend(list(image_paths)[:4])
+                _load_previews()
+
+
+        # Initial load of existing images
+        _load_previews()
 
         add_images_button = tk.Button(
             img_row,
@@ -883,8 +937,8 @@ class App:
             relief='flat',
             cursor='hand2',
             font=('Arial', BODY)
-            )
-        add_images_button.grid(row=2, column=0, sticky="nsew", pady=10,  padx=(0,5))
+        )
+        add_images_button.grid(row=2, column=0, columnspan=3, sticky="nsew", pady=10)
 
         # ── Description ───────────────────────────────────────────
         description_label = tk.Label(
@@ -927,12 +981,14 @@ class App:
                 'image_path':  chosen_path[0],
             }
             self._photo_cache.pop(week_num, None)
+
+            # Close the popup
             self.week_note_popup.destroy()
 
         def _clear():
             self._week_notes.pop(week_num, None)
             self._photo_cache.pop(week_num, None)
-            self.week_note_popup.destroy()
+            self.event_type_dropdown.set("Select Category")
 
         cancel_popup_button = tk.Button(
             btn_row,
