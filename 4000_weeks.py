@@ -75,6 +75,30 @@ DEFAULT_LABEL_COLOURS = [
     (FUTURE_COLOR,'Future'),
 ]
 
+# ── Event Types ────────────────────────────────────────────────────────────────
+event_types = [
+    "Select Category",
+    "Activities",
+    "Travel",
+    "Education",
+    "Career",
+    "Relationships",
+    "Health",
+    "Family",
+    "Other"]
+
+event_type_colours = {
+    "Select Category": BG,
+    "Activities"     : ORANGE,
+    "Travel"         : PURPLE,
+    "Education"      : BLUE,
+    "Career"         : GREEN,
+    "Relationships"  : PINK,
+    "Health"         : POLLEN,
+    "Family"         : LILAC,
+    "Other"          : STONE
+}
+
 # ── Font sizes ────────────────────────────────────────────────────────────────
 H1    = ('Futura-PT', 50, 'bold')
 H2    = 36 #('Futura-PT', 38, 'medium')
@@ -713,10 +737,28 @@ class App:
 
     def _has_note_data(self, note) -> bool:
         return bool(note and (note.get('description') or note.get('image_path')))
+
+    def update_popup_background(self, event=None):
+            event_type = self.event_type_dropdown.get()
+            new_background_colour = event_type_colours[event_type]
     
+            # Set the popup background
+            self.week_note_popup.config(bg=new_background_colour)
+
+            # Set the sub-widget backgrounds
+            for widget in self.popup_widgets:
+                try:
+                    widget.configure(bg=new_background_colour)
+                except Exception as error:
+                    print(f"{widget} could not be updated: {error}")
+                    pass
+            
     def _open_note_dialog(self, week_num: int):
         self._hide_tooltip()
         existing = self._week_notes.get(week_num, {})
+
+        # Store a list of widgets that need their backgrounds to update with the event type
+        self.popup_widgets = []
 
         row, col = divmod(week_num, COLS)
         try:
@@ -725,40 +767,43 @@ class App:
         except (AttributeError, TypeError):
             title_text = f'{row} years & {col + 1} weeks'
 
-        week_note_popup = tk.Toplevel(self.root)
-        week_note_popup.title('Week Note')
-        week_note_popup.configure(bg=BG, padx=20, pady=20)
-        week_note_popup.resizable(False, False)
-        week_note_popup.grab_set()
+        self.week_note_popup = tk.Toplevel(self.root)
+        self.week_note_popup.title('Week Note')
+        self.week_note_popup.configure(bg=BG, padx=20, pady=20)
+        self.week_note_popup.resizable(False, False)
+        self.week_note_popup.grab_set()
 
         sw, sh = self.get_screen_dims()
-        week_note_popup.geometry(f'450x580+{(sw - 440) // 2}+{(sh - 320) // 2}')
+        self.week_note_popup.geometry(f'450x580+{(sw - 440) // 2}+{(sh - 320) // 2}')
 
         # Date information at the top of the popup.
-        tk.Label(
-            week_note_popup,
+        date_title = tk.Label(
+            self.week_note_popup,
             text=title_text,
             bg=BG,
             fg=TEXT_FG,
             font=('Arial', H3)
-            ).pack(anchor='w', pady=(0, 10))
+            )
+        date_title.pack(anchor='w', pady=(0, 10))
 
-        # ── Event Type row ─────────────────────────────────────────────
-        # Event types
-        event_types = ["Select Category","Activities", "Travel", "Education", "Career", "Relationships", "Health", "Family", "Other"]
-        
-        event_type_dropdown = ttk.Combobox(
-            week_note_popup,
+        self.popup_widgets.append(date_title)
+
+        # ── Event Type row ─────────────────────────────────────────────    
+        self.event_type_dropdown = ttk.Combobox(
+            self.week_note_popup,
             values= event_types,
             state="readonly",
             font=("Futura-PT", BODY)
         )
-        event_type_dropdown.set("Select Category")
-        event_type_dropdown.pack(fill="x", anchor="n", pady=10)
+        self.event_type_dropdown.set("Select Category")
+        self.event_type_dropdown.pack(fill="x", anchor="n", pady=10)
+        self.event_type_dropdown.bind("<<ComboboxSelected>>", self.update_popup_background)
 
         # ── Image row ─────────────────────────────────────────────
-        img_row = tk.Frame(week_note_popup, bg=BG)
+        img_row = tk.Frame(self.week_note_popup, bg=BG)
         img_row.pack(fill='x', pady=10, anchor="n")
+
+        self.popup_widgets.append(img_row)
 
         img_row.columnconfigure((0,1,2), weight=1)
 
@@ -822,14 +867,14 @@ class App:
 
         def _pick_image():
             p = filedialog.askopenfilename(
-                parent=week_note_popup, title='Choose image',
+                parent=self.week_note_popup, title='Choose image',
                 filetypes=[('Images', '*.jpg *.jpeg *.png *.webp *.gif *.bmp'),
                            ('All files', '*.*')])
             if p:
                 chosen_path[0] = p
                 _load_preview(p)
 
-        tk.Button(
+        add_images_button = tk.Button(
             img_row,
             text='Add images',
             command=_pick_image,
@@ -838,19 +883,23 @@ class App:
             relief='flat',
             cursor='hand2',
             font=('Arial', BODY)
-            ).grid(row=2, column=0, sticky="nsew", pady=10,  padx=(0,5))
+            )
+        add_images_button.grid(row=2, column=0, sticky="nsew", pady=10,  padx=(0,5))
 
         # ── Description ───────────────────────────────────────────
-        tk.Label(
-            week_note_popup,
+        description_label = tk.Label(
+            self.week_note_popup,
             text='Description',
             bg=BG,
             fg=TEXT_FG,
             font=('Futura-PT', LABEL)
-            ).pack(anchor='w', pady=(10,5))
+            )
+        description_label.pack(anchor='w', pady=(10,5))
+
+        self.popup_widgets.append(description_label)
 
         description_box = tk.Text(
-            week_note_popup,
+            self.week_note_popup,
             height=5,
             bg=FUTURE_COLOR,
             fg=TEXT_FG,
@@ -865,9 +914,11 @@ class App:
             description_box.insert('1.0', existing['description'])
 
         # ── Buttons ───────────────────────────────────────────────
-        btn_row = tk.Frame(week_note_popup, bg=BG)
+        btn_row = tk.Frame(self.week_note_popup, bg=BG)
         btn_row.pack(fill='x', expand=True, anchor="s")
         btn_row.columnconfigure((0,1,2), weight=1)
+
+        self.popup_widgets.append(btn_row)
 
         def _save():
             desc = description_box.get('1.0', 'end').strip()
@@ -876,17 +927,17 @@ class App:
                 'image_path':  chosen_path[0],
             }
             self._photo_cache.pop(week_num, None)
-            week_note_popup.destroy()
+            self.week_note_popup.destroy()
 
         def _clear():
             self._week_notes.pop(week_num, None)
             self._photo_cache.pop(week_num, None)
-            week_note_popup.destroy()
+            self.week_note_popup.destroy()
 
         cancel_popup_button = tk.Button(
             btn_row,
             text='Cancel',
-            command=week_note_popup.destroy,
+            command=self.week_note_popup.destroy,
             bg=FUTURE_COLOR,
             fg=TEXT_FG,
             relief='flat',
@@ -993,10 +1044,10 @@ class App:
                 messagebox.showwarning("Warning", "Could not update birthday, please try again.", parent=self.root)
                 return
                 
-            popup.destroy()
+            self.popup.destroy()
         
         def close_popup(self):
-            popup.destroy()
+            self.popup.destroy()
 
         # Create confirm and quit buttons
         btn_frame = tk.Frame(popup)
@@ -1020,8 +1071,8 @@ class App:
         btn_create.grid(row=0, column=2, padx=(5,0))
 
         # Bind keyboard inputs
-        popup.bind("<Escape>", close_popup)
-        popup.bind("<Return>", update_name)
+        self.popup.bind("<Escape>", close_popup)
+        self.popup.bind("<Return>", update_name)
 
     # ── Save / Load ───────────────────────────────────────────────────────────
 
