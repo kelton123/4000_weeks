@@ -721,29 +721,82 @@ class App:
         row, col = divmod(week_num, COLS)
         try:
             week_start = self._dob + timedelta(weeks=week_num)
-            title_text = f'Week note | {row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
+            title_text = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
-            title_text = f'Week note | {row} years & {col + 1} weeks'
+            title_text = f'{row} years & {col + 1} weeks'
 
-        dlg = tk.Toplevel(self.root)
-        dlg.title('Week Note')
-        dlg.configure(bg=BG)
-        dlg.resizable(False, False)
-        dlg.grab_set()
+        week_note_popup = tk.Toplevel(self.root)
+        week_note_popup.title('Week Note')
+        week_note_popup.configure(bg=BG, padx=20, pady=20)
+        week_note_popup.resizable(False, False)
+        week_note_popup.grab_set()
 
         sw, sh = self.get_screen_dims()
-        dlg.geometry(f'440x320+{(sw - 440) // 2}+{(sh - 320) // 2}')
+        week_note_popup.geometry(f'500x700+{(sw - 440) // 2}+{(sh - 320) // 2}')
 
-        tk.Label(dlg, text=title_text, bg=BG, fg=TEXT_FG,
-                 font=('Arial', LABEL)).pack(anchor='w', padx=16, pady=(14, 10))
+        # Date information at the top of the popup.
+        tk.Label(
+            week_note_popup,
+            text=title_text,
+            bg=BG,
+            fg=TEXT_FG,
+            font=('Arial', H3)
+            ).pack(anchor='w', pady=(0, 10))
+
+        # ── Event Type row ─────────────────────────────────────────────
+        # Event types
+        event_types = ["Select Category","Activities", "Travel", "Education", "Career", "Relationships", "Health", "Family", "Other"]
+        
+        event_type_dropdown = ttk.Combobox(
+            week_note_popup,
+            values= event_types,
+            state="readonly",
+            font=("Futura-PT", BODY)
+        )
+        event_type_dropdown.set("Select Category")
+        event_type_dropdown.pack(fill="x", expand=True, pady=5, anchor="n")
 
         # ── Image row ─────────────────────────────────────────────
-        img_row = tk.Frame(dlg, bg=BG)
-        img_row.pack(fill='x', padx=16, pady=(0, 10))
+        img_row = tk.Frame(week_note_popup, bg=BG)
+        img_row.pack(fill='x', pady=(0, 10), anchor="n", expand=True)
+        img_row.columnconfigure(0, weight=2)
+        img_row.columnconfigure((1,2), weight=1)
 
-        preview = tk.Canvas(img_row, width=120, height=80, bg=FUTURE_COLOR,
-                            highlightthickness=0)
-        preview.pack(side='left', padx=(0, 14))
+        preview = tk.Canvas(
+            img_row,
+            bg="#0000ff",
+            width=1,
+            height=200,
+            highlightthickness=0
+            )
+        preview.grid(row=0, column=0, rowspan=2, padx=5, sticky="nsew")
+
+        preview_1 = tk.Canvas(
+                    img_row,
+                    bg="#ff0000",
+                    height=200,
+                    width=1,
+                    highlightthickness=0
+                    )
+        preview_1.grid(row=0, column=1, padx=5, rowspan=2, sticky="nsew")
+
+        preview_2 = tk.Canvas(
+                    img_row,
+                    bg="#00ff00",
+                    height=50,
+                    width=1,
+                    highlightthickness=0
+                    )
+        preview_2.grid(row=0, column=2, padx=5, pady=(0,5), sticky="nsew")
+
+        preview_3 = tk.Canvas(
+                    img_row,
+                    bg="#00ffff",
+                    height=50,
+                    width=1,
+                    highlightthickness=0
+                    )
+        preview_3.grid(row=1, column=2, padx=5, pady=(5,0), sticky="nsew")
 
         chosen_path  = [existing.get('image_path')]
         photo_ref    = [None]
@@ -767,58 +820,102 @@ class App:
 
         def _pick_image():
             p = filedialog.askopenfilename(
-                parent=dlg, title='Choose image',
+                parent=week_note_popup, title='Choose image',
                 filetypes=[('Images', '*.jpg *.jpeg *.png *.webp *.gif *.bmp'),
                            ('All files', '*.*')])
             if p:
                 chosen_path[0] = p
                 _load_preview(p)
 
-        side = tk.Frame(img_row, bg=BG)
-        side.pack(side='left', anchor='n')
-        tk.Button(side, text='Choose image…', command=_pick_image,
-                  bg=FUTURE_COLOR, fg=TEXT_FG, relief='flat', cursor='hand2',
-                  font=('Arial', LABEL)).pack(anchor='w')
-        tk.Label(side, textvariable=filename_var, bg=BG, fg=TEXT_FG,
-                 font=('Arial', 10), wraplength=230).pack(anchor='w', pady=(4, 0))
+        tk.Button(
+            img_row,
+            text='Add images',
+            command=_pick_image,
+            bg=FUTURE_COLOR,
+            fg=TEXT_FG,
+            relief='flat',
+            cursor='hand2',
+            font=('Arial', BODY)
+            ).grid(row=2, column=0)
 
         # ── Description ───────────────────────────────────────────
-        tk.Label(dlg, text='Description', bg=BG, fg=TEXT_FG,
-                 font=('Arial', LABEL)).pack(anchor='w', padx=16)
-        desc_box = tk.Text(dlg, height=4, bg=FUTURE_COLOR, fg=TEXT_FG,
-                           insertbackground=TEXT_FG, relief='flat',
-                           font=('Arial', LABEL), wrap='word')
-        desc_box.pack(fill='x', padx=16, pady=(4, 12))
+        tk.Label(
+            week_note_popup,
+            text='Description',
+            bg=BG,
+            fg=TEXT_FG,
+            font=('Arial', LABEL)
+            ).pack(anchor='w', pady=(10,0))
+
+        description_box = tk.Text(
+            week_note_popup,
+            height=4,
+            bg=FUTURE_COLOR,
+            fg=TEXT_FG,
+            insertbackground=TEXT_FG,
+            relief='flat',
+            font=('Arial', LABEL),
+            wrap='word'
+            )
+        description_box.pack(fill='x')
+
         if existing.get('description'):
-            desc_box.insert('1.0', existing['description'])
+            description_box.insert('1.0', existing['description'])
 
         # ── Buttons ───────────────────────────────────────────────
-        btn_row = tk.Frame(dlg, bg=BG)
-        btn_row.pack(fill='x', padx=16, pady=(0, 16))
+        btn_row = tk.Frame(week_note_popup, bg=BG)
+        btn_row.pack(fill='x', pady=(30, 0), expand=True, anchor="s")
+        btn_row.columnconfigure((0,1,2), weight=1)
 
         def _save():
-            desc = desc_box.get('1.0', 'end').strip()
+            desc = description_box.get('1.0', 'end').strip()
             self._week_notes[week_num] = {
                 'description': desc,
                 'image_path':  chosen_path[0],
             }
             self._photo_cache.pop(week_num, None)
-            dlg.destroy()
+            week_note_popup.destroy()
 
         def _clear():
             self._week_notes.pop(week_num, None)
             self._photo_cache.pop(week_num, None)
-            dlg.destroy()
+            week_note_popup.destroy()
 
-        tk.Button(btn_row, text='Save', command=_save,
-                  bg=BLUE, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), padx=14).pack(side='left', padx=(0, 8))
-        tk.Button(btn_row, text='Clear', command=_clear,
-                  bg=FUTURE_COLOR, fg=TEXT_FG, relief='flat', cursor='hand2',
-                  font=('Arial', LABEL), padx=14).pack(side='left', padx=(0, 8))
-        tk.Button(btn_row, text='Cancel', command=dlg.destroy,
-                  bg=FUTURE_COLOR, fg=TEXT_FG, relief='flat', cursor='hand2',
-                  font=('Arial', LABEL), padx=14).pack(side='left')
+        save_popup_button = tk.Button(
+            btn_row,
+            text='Save',
+            command=_save,
+            bg=BLUE,
+            fg='white',
+            relief='flat',
+            cursor='hand2',
+            font=('Arial', LABEL, 'bold'),
+            padx=14)
+        save_popup_button.grid(row=0, column=0, sticky='nsew')
+
+        clear_popup_button = tk.Button(
+            btn_row,
+            text='Clear',
+            command=_clear,
+            bg=FUTURE_COLOR,
+            fg=TEXT_FG,
+            relief='flat',
+            cursor='hand2',
+            font=('Arial', LABEL),
+            padx=14)
+        clear_popup_button.grid(row=0, column=1, sticky='nsew', padx=10)
+
+        cancel_popup_button = tk.Button(
+            btn_row,
+            text='Cancel',
+            command=week_note_popup.destroy,
+            bg=FUTURE_COLOR,
+            fg=TEXT_FG,
+            relief='flat',
+            cursor='hand2',
+            font=('Arial', LABEL),
+            padx=14)
+        cancel_popup_button.grid(row=0, column=2, sticky='nsew')
 
     # ── Update Birthday ───────────────────────────────────────────────────────────
 
