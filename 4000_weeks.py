@@ -762,7 +762,7 @@ class App:
 
         img_row.columnconfigure((0,1,2), weight=1)
 
-        row_height = 100
+        row_height = 80
 
         preview = tk.Canvas(
             img_row,
@@ -838,7 +838,7 @@ class App:
             relief='flat',
             cursor='hand2',
             font=('Arial', BODY)
-            ).grid(row=2, column=0, sticky="nsew", pady=10)
+            ).grid(row=2, column=0, sticky="nsew", pady=10,  padx=(0,5))
 
         # ── Description ───────────────────────────────────────────
         tk.Label(
@@ -866,7 +866,7 @@ class App:
 
         # ── Buttons ───────────────────────────────────────────────
         btn_row = tk.Frame(week_note_popup, bg=BG)
-        btn_row.pack(fill='x', pady=(30, 0), expand=True, anchor="s")
+        btn_row.pack(fill='x', expand=True, anchor="s")
         btn_row.columnconfigure((0,1,2), weight=1)
 
         def _save():
@@ -893,7 +893,7 @@ class App:
             cursor='hand2',
             font=('Arial', LABEL),
             padx=14)
-        cancel_popup_button.grid(row=0, column=2, sticky='nsew')
+        cancel_popup_button.grid(row=0, column=0, sticky='nsew')
 
         clear_popup_button = tk.Button(
             btn_row,
@@ -911,13 +911,13 @@ class App:
             btn_row,
             text='Save',
             command=_save,
-            bg=BLUE,
-            fg='white',
+            bg="#ffffff",
+            fg="#262626",
             relief='flat',
             cursor='hand2',
-            font=('Arial', LABEL, 'bold'),
+            font=('Futura-PT', LABEL, 'bold'),
             padx=14)
-        save_popup_button.grid(row=0, column=0, sticky='nsew')
+        save_popup_button.grid(row=0, column=2, sticky='nsew')
 
     # ── Update Birthday ───────────────────────────────────────────────────────────
 
