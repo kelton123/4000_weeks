@@ -77,10 +77,10 @@ DEFAULT_LABEL_COLOURS = [
 
 # ── Font sizes ────────────────────────────────────────────────────────────────
 H1    = ('Futura-PT', 50, 'bold')
-H2    = 38 #('Futura-PT', 38, 'medium')
-H3    = 28 # ('Futura-PT', 28, 'medium')
-BODY  = 18 #('Futura-PT', 18, 'book')
-LABEL = 14 #('Futura-PT', 14, 'book')
+H2    = 36 #('Futura-PT', 38, 'medium')
+H3    = 24 # ('Futura-PT', 28, 'medium')
+BODY  = 12 #('Futura-PT', 18, 'book')
+LABEL = 10 #('Futura-PT', 14, 'book')
 
 
 
