@@ -76,11 +76,11 @@ DEFAULT_LABEL_COLOURS = [
 ]
 
 # ── Font sizes ────────────────────────────────────────────────────────────────
-H1    = ('Arial', 42, 'bold')
-H2    = 33 #('Arial', 33, 'bold')
-H3    = 26 # ('Arial', 26, 'bold')
-BODY  = 16 #('Arial', 16, 'bold')
-LABEL = 13 #('Arial', 13, 'bold')
+H1    = ('Futura-PT', 50, 'bold')
+H2    = 38 #('Futura-PT', 38, 'medium')
+H3    = 28 # ('Futura-PT', 28, 'medium')
+BODY  = 18 #('Futura-PT', 18, 'book')
+LABEL = 14 #('Futura-PT', 14, 'book')
 
 
 
@@ -289,7 +289,7 @@ class App:
 
         # Create a frame to keep the header section the same width as the grid section.
         frame = tk.Frame(self._content, width=CANVAS_WIDTH, height=80, bg=BG)
-        frame.pack(pady=(22, 2))
+        frame.pack(pady=(100, 2))
         frame.pack_propagate(False)
 
         # The active birthday - default text is "Add birthday".
@@ -334,7 +334,7 @@ class App:
             bg=BG,
             cursor='hand2',
             pady=2)
-        open_button.grid(row=0, column=1, padx=20, ipadx=10)
+        open_button.grid(row=0, column=1, padx=5, ipadx=10)
 
         # Required so the image doesn't get garbae collected.
         open_button.image = self.open_folder_image
@@ -355,7 +355,7 @@ class App:
             fg='white',
             cursor='hand2',
             pady=2)
-        save_button.grid(row=0, column=2, padx=20, ipadx=10)
+        save_button.grid(row=0, column=2, padx=5, ipadx=10)
 
         save_button.image = save_icon_image
 
@@ -372,7 +372,7 @@ class App:
             image=theme_icon_image,
             cursor='hand2',
             pady=2)
-        theme_button.grid(row=0, column=3, padx=20, ipadx=10)
+        theme_button.grid(row=0, column=3, padx=5, ipadx=10)
 
         theme_button.image = theme_icon_image
 
@@ -396,7 +396,7 @@ class App:
                 text=key,
                 bg=BG,
                 fg=TEXT_FG,
-                font=('Arial', LABEL)
+                font=('Futura-PT', LABEL)
                 ).grid(row=0, column=i, padx=40)
             
             v = tk.StringVar(value='—')
@@ -408,7 +408,7 @@ class App:
                 textvariable=v,
                 bg=BG,
                 fg=TEXT_FG,
-                font=('Arial', BODY, 'bold')
+                font=('Futura-PT', H2, 'bold')
                 ).grid(row=1, column=i, padx=40)
 
         # Spacer
