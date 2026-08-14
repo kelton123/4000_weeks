@@ -171,7 +171,7 @@ class App:
         self._custom_labels : list[dict]                    = []   # [{name, color}, …]
         self._week_labels   : dict[int, int]                = {}   # week_num → label index
         self._week_notes    : dict[int, dict]               = {}   # week_num → {description, image_path}
-        self._photo_cache   : dict[int, ImageTk.PhotoImage] = {}  # keeps refs alive
+        self._photo_cache   : dict[int, ImageTk.PhotoImage] = {}   # keeps refs alive
         self.week_cells     : list[Week_Cell]               = []
 
         self._weeks_lived   = 0
@@ -257,7 +257,6 @@ class App:
         # Build all of the sub-sections
         self._build_header()
         self._build_controls()
-        # self._build_legend()
         self._build_grid()
         self._build_footer()
 
@@ -500,8 +499,13 @@ class App:
         outer = tk.Frame(self._content, bg=BG)
         outer.pack(pady=(0, 20))
 
-        self.canvas = tk.Canvas(outer, bg=BG, highlightthickness=0,
-                                width=CANVAS_WIDTH, height=ROWS * CELL + GAP)
+        self.canvas = tk.Canvas(
+            outer,
+            bg=BG,
+            highlightthickness=0,
+            width=CANVAS_WIDTH,
+            height=ROWS * CELL + GAP
+            )
         self.canvas.pack()
 
         self._boxes: list[list[int]] = []
@@ -509,17 +513,6 @@ class App:
 
         for year in range(ROWS):
             y_top = GAP + year * CELL
-
-            # Create the delta year label.
-            if year % 5 == 0:
-                self.canvas.create_text(
-                    YEAR_W - 30,
-                    y_top + BOX // 2,
-                    text=str(year),
-                    anchor='w',
-                    fill=TEXT_FG,
-                    font=('Arial', LABEL)
-                )
 
             # Create the row of week boxes.
             row: list[int] = []
@@ -537,19 +530,6 @@ class App:
                 self.week_cells.append(cell)
                     
                 row.append(rect)
-            
-            # Add the year to the right of the grid
-            if year % 5 == 0:
-                birth_year = int(self.dob_var.get()[0:4])
-                year_label = self.canvas.create_text(
-                    CANVAS_WIDTH -  50,
-                    y_top + BOX // 2,
-                    text = str(birth_year + year),
-                    anchor = 'w',
-                    fill = TEXT_FG,
-                    font = ('Arial', LABEL)
-                )
-                self.years_labels.append(year_label)
 
             self._boxes.append(row)
 
