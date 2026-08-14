@@ -535,8 +535,7 @@ class App:
 
         self.canvas.bind('<Motion>',          self._on_hover)
         self.canvas.bind('<Leave>',           self._on_leave)
-        self.canvas.bind('<Button-1>',        self._on_click)
-        self.canvas.bind('<Double-Button-1>', self._on_double_click)
+        self.canvas.bind('<Button-1>',        self._open_week_popup)
 
     def _build_footer(self):
         f = tk.Frame(self._content, bg=BG)
@@ -587,49 +586,7 @@ class App:
             self.canvas.itemconfig(label_id, text= str(birth_year + (5*i)))
 
     # ── Grid interaction ──────────────────────────────────────────────────────
-
-    def _on_click(self, event: tk.Event):
-        if self._click_pending:
-            self.root.after_cancel(self._click_pending)
-        self._click_pending = self.root.after(250, lambda: self._do_single_click(event))
-
-    def _do_single_click(self, event: tk.Event):
-        self._click_pending = None
-        if not self._custom_labels:
-            return
-
-        cx = self.canvas.canvasx(event.x)
-        cy = self.canvas.canvasy(event.y)
-        gx = cx - YEAR_W - GAP
-        gy = cy - GAP
-        if gx < 0 or gy < 0:
-            return
-
-        col = int(gx // CELL)
-        row = int(gy // CELL)
-        if not (0 <= col < COLS and 0 <= row < ROWS):
-            return
-
-        week_num = row * COLS + col
-        if week_num >= self._weeks_lived - 1:
-            return  # only past weeks
-
-        current_idx = self._week_labels.get(week_num, -1)
-        next_idx    = current_idx + 1
-        rect        = self._boxes[row][col]
-
-        if next_idx >= len(self._custom_labels):
-            self._week_labels.pop(week_num, None)
-            self.canvas.itemconfig(rect, fill=PAST_COLOR)
-        else:
-            self._week_labels[week_num] = next_idx
-            self.canvas.itemconfig(rect, fill=self._custom_labels[next_idx]['color'])
-
-        # Invalidate tooltip cache for this cell so it refreshes
-        if self._tooltip_week == week_num:
-            self._tooltip_week = None
-
-    def _on_double_click(self, event: tk.Event):
+    def _open_week_popup(self, event: tk.Event):
         if self._click_pending:
             self.root.after_cancel(self._click_pending)
             self._click_pending = None
@@ -1041,6 +998,7 @@ class App:
 
 def main():
     root = tk.Tk()
+
     App(root)
     root.mainloop()
 
