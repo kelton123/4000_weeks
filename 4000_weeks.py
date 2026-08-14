@@ -78,7 +78,7 @@ DEFAULT_LABEL_COLOURS = [
 # ── Font sizes ────────────────────────────────────────────────────────────────
 H1    = ('Futura-PT', 50, 'bold')
 H2    = 36 #('Futura-PT', 38, 'medium')
-H3    = 24 # ('Futura-PT', 28, 'medium')
+H3    = 20 # ('Futura-PT', 28, 'medium')
 BODY  = 12 #('Futura-PT', 18, 'book')
 LABEL = 10 #('Futura-PT', 14, 'book')
 
@@ -732,7 +732,7 @@ class App:
         week_note_popup.grab_set()
 
         sw, sh = self.get_screen_dims()
-        week_note_popup.geometry(f'500x700+{(sw - 440) // 2}+{(sh - 320) // 2}')
+        week_note_popup.geometry(f'450x580+{(sw - 440) // 2}+{(sh - 320) // 2}')
 
         # Date information at the top of the popup.
         tk.Label(
@@ -754,27 +754,29 @@ class App:
             font=("Futura-PT", BODY)
         )
         event_type_dropdown.set("Select Category")
-        event_type_dropdown.pack(fill="x", expand=True, pady=5, anchor="n")
+        event_type_dropdown.pack(fill="x", anchor="n", pady=10)
 
         # ── Image row ─────────────────────────────────────────────
         img_row = tk.Frame(week_note_popup, bg=BG)
-        img_row.pack(fill='x', pady=(0, 10), anchor="n", expand=True)
-        img_row.columnconfigure(0, weight=2)
-        img_row.columnconfigure((1,2), weight=1)
+        img_row.pack(fill='x', pady=10, anchor="n")
+
+        img_row.columnconfigure((0,1,2), weight=1)
+
+        row_height = 100
 
         preview = tk.Canvas(
             img_row,
-            bg="#0000ff",
+            bg=FUTURE_COLOR,
             width=1,
-            height=200,
+            height=row_height * 2,
             highlightthickness=0
             )
-        preview.grid(row=0, column=0, rowspan=2, padx=5, sticky="nsew")
+        preview.grid(row=0, column=0, rowspan=2, padx=(0,5), sticky="nsew")
 
         preview_1 = tk.Canvas(
                     img_row,
-                    bg="#ff0000",
-                    height=200,
+                    bg=FUTURE_COLOR,
+                    height=row_height * 2,
                     width=1,
                     highlightthickness=0
                     )
@@ -782,21 +784,21 @@ class App:
 
         preview_2 = tk.Canvas(
                     img_row,
-                    bg="#00ff00",
-                    height=50,
+                    bg=FUTURE_COLOR,
+                    height=row_height,
                     width=1,
                     highlightthickness=0
                     )
-        preview_2.grid(row=0, column=2, padx=5, pady=(0,5), sticky="nsew")
+        preview_2.grid(row=0, column=2, padx=(5,0), pady=(0,5), sticky="nsew")
 
         preview_3 = tk.Canvas(
                     img_row,
-                    bg="#00ffff",
-                    height=50,
+                    bg=FUTURE_COLOR,
+                    height=row_height,
                     width=1,
                     highlightthickness=0
                     )
-        preview_3.grid(row=1, column=2, padx=5, pady=(5,0), sticky="nsew")
+        preview_3.grid(row=1, column=2, padx=(5,0), pady=(5,0), sticky="nsew")
 
         chosen_path  = [existing.get('image_path')]
         photo_ref    = [None]
@@ -836,7 +838,7 @@ class App:
             relief='flat',
             cursor='hand2',
             font=('Arial', BODY)
-            ).grid(row=2, column=0)
+            ).grid(row=2, column=0, sticky="nsew", pady=10)
 
         # ── Description ───────────────────────────────────────────
         tk.Label(
@@ -844,12 +846,12 @@ class App:
             text='Description',
             bg=BG,
             fg=TEXT_FG,
-            font=('Arial', LABEL)
-            ).pack(anchor='w', pady=(10,0))
+            font=('Futura-PT', LABEL)
+            ).pack(anchor='w', pady=(10,5))
 
         description_box = tk.Text(
             week_note_popup,
-            height=4,
+            height=5,
             bg=FUTURE_COLOR,
             fg=TEXT_FG,
             insertbackground=TEXT_FG,
@@ -857,7 +859,7 @@ class App:
             font=('Arial', LABEL),
             wrap='word'
             )
-        description_box.pack(fill='x')
+        description_box.pack(fill='x', pady=(0,10))
 
         if existing.get('description'):
             description_box.insert('1.0', existing['description'])
@@ -881,17 +883,17 @@ class App:
             self._photo_cache.pop(week_num, None)
             week_note_popup.destroy()
 
-        save_popup_button = tk.Button(
+        cancel_popup_button = tk.Button(
             btn_row,
-            text='Save',
-            command=_save,
-            bg=BLUE,
-            fg='white',
+            text='Cancel',
+            command=week_note_popup.destroy,
+            bg=FUTURE_COLOR,
+            fg=TEXT_FG,
             relief='flat',
             cursor='hand2',
-            font=('Arial', LABEL, 'bold'),
+            font=('Arial', LABEL),
             padx=14)
-        save_popup_button.grid(row=0, column=0, sticky='nsew')
+        cancel_popup_button.grid(row=0, column=2, sticky='nsew')
 
         clear_popup_button = tk.Button(
             btn_row,
@@ -905,17 +907,17 @@ class App:
             padx=14)
         clear_popup_button.grid(row=0, column=1, sticky='nsew', padx=10)
 
-        cancel_popup_button = tk.Button(
+        save_popup_button = tk.Button(
             btn_row,
-            text='Cancel',
-            command=week_note_popup.destroy,
-            bg=FUTURE_COLOR,
-            fg=TEXT_FG,
+            text='Save',
+            command=_save,
+            bg=BLUE,
+            fg='white',
             relief='flat',
             cursor='hand2',
-            font=('Arial', LABEL),
+            font=('Arial', LABEL, 'bold'),
             padx=14)
-        cancel_popup_button.grid(row=0, column=2, sticky='nsew')
+        save_popup_button.grid(row=0, column=0, sticky='nsew')
 
     # ── Update Birthday ───────────────────────────────────────────────────────────
 
