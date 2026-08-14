@@ -12,7 +12,7 @@ from PIL import Image, ImageTk
 ROWS          = 81          # max years rendered
 COLS          = 52          # weeks per year
 BOX           = 15          # box size in pixels
-GAP           = 5           # gap between boxes
+GAP           = 4           # gap between boxes
 CELL          = BOX + GAP   # 20 px per cell
 YEAR_W        = 30          # left column reserved for year labels
 CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W + YEAR_W
@@ -322,45 +322,63 @@ class App:
         tool_frame.pack(anchor='center', fill='x', expand=True)
         tool_frame.columnconfigure([0,4], weight=3)
 
-        # Open file button to load a visualisation from a file.
-        open_button = tk.Button(
+        # OPEN FILE BUTTON TO IMPORT SAVED FILES
+        # TODO: move the handling of these button images to another function.
+        open_folder_icon = Image.open("icons/open_white.png")
+        open_folder_icon = open_folder_icon.resize((20,20))
+        self.open_folder_image = ImageTk.PhotoImage(open_folder_icon)
+
+        open_button = tk.Label(
             tool_frame,
-            text="Load",
-            command=self.load_data,
-            bg=FUTURE_COLOR,
-            fg='white',
-            relief='flat',
+            image=self.open_folder_image,
+            bg=BG,
             cursor='hand2',
-            font=('Arial', LABEL, 'bold'),
             pady=2)
         open_button.grid(row=0, column=1, padx=20, ipadx=10)
 
-        # Save the current visualisation with all of the metadata to a file.
-        save_button = tk.Button(
+        # Required so the image doesn't get garbae collected.
+        open_button.image = self.open_folder_image
+
+        # Bind label to call the load data function
+        open_button.bind("<Button-1>", lambda event: self.load_data())
+        # TODO: add function to update cursor to hover. open_button.bind("<Enter>", )
+
+        # SAVE VISUALISATION BUTTON
+        save_icon = Image.open("icons/save_white.png")
+        save_icon = save_icon.resize((20,20))
+        save_icon_image = ImageTk.PhotoImage(save_icon)
+
+        save_button = tk.Label(
             tool_frame,
-            text="Save",
-            command=self.save_data,
-            bg=FUTURE_COLOR,
+            image=save_icon_image,
+            bg=BG,
             fg='white',
-            relief='flat',
             cursor='hand2',
-            font=('Arial', LABEL, 'bold'),
             pady=2)
         save_button.grid(row=0, column=2, padx=20, ipadx=10)
 
+        save_button.image = save_icon_image
+
+        save_button.bind("<Button-1>", lambda event: self.save_data())
+
         # Light and dark mode toggle.
-        theme_button = tk.Button(
+        theme_icon = Image.open("icons/light mode.png")
+        theme_icon = theme_icon.resize((20,20))
+        theme_icon_image = ImageTk.PhotoImage(theme_icon)
+
+        theme_button = tk.Label(
             tool_frame,
-            text="Light",
-            bg=FUTURE_COLOR,
-            fg='white',
-            relief='flat',
+            bg=BG,
+            image=theme_icon_image,
             cursor='hand2',
-            font=('Arial', LABEL, 'bold'),
             pady=2)
         theme_button.grid(row=0, column=3, padx=20, ipadx=10)
 
-        # Spacer pushes stats to the right
+        theme_button.image = theme_icon_image
+
+        # TODO: create the binding to update the ui theme.
+        
+        # Spacer
         tk.Frame(frame, bg=BG, height=100).pack(anchor='center', fill='both', expand=True)
 
         # Stats about the 4000 weeks visualisation. 
@@ -392,6 +410,9 @@ class App:
                 fg=TEXT_FG,
                 font=('Arial', BODY, 'bold')
                 ).grid(row=1, column=i, padx=40)
+
+        # Spacer
+        tk.Frame(frame, bg=BG, height=100).pack(anchor='center', fill='both', expand=True)
 
     def _build_legend(self):
         self._legend_frame = tk.Frame(self._content, bg= BG, width= CANVAS_WIDTH, height= 40)
