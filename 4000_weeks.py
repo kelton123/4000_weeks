@@ -4,7 +4,7 @@ import random
 import shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from PIL import Image, ImageTk, ImageOps
 
@@ -119,8 +119,9 @@ class Week_Cell:
             label       :str,
             colour      :str,
             rectangle,
-            image_path  = "",
-            description = ""):
+            image_paths = None,
+            description = "",
+            category    = "Select Category"):
         
         self.id = id
         self.year        = year
@@ -130,8 +131,9 @@ class Week_Cell:
         self.cell        = rectangle
         
         # Optional metadata which is added by the user.
-        self.image_path  = image_path
+        self.image_paths = image_paths if image_paths is not None else []
         self.description = description
+        self.category    = category
         
         # Getter for week_number
         @property
@@ -194,8 +196,8 @@ class App:
         # ── Runtime state ─────────────────────────────────────────
         self._custom_labels : list[dict]                    = []   # [{name, color}, …]
         self._week_labels   : dict[int, int]                = {}   # week_num → label index
-        self._week_notes    : dict[int, dict]               = {}   # week_num → {description, image_path}
-        self._photo_cache   : dict[int, ImageTk.PhotoImage] = {}   # keeps refs alive
+        self._week_notes    : dict[int, dict]               = {}   # week_num → {description, image_paths, category}
+        self._photo_cache   : dict[int, list[ImageTk.PhotoImage]] = {}   # keeps refs alive (list per week, up to 4 thumbnails)
         self.week_cells     : list[Week_Cell]               = []
 
         self._weeks_lived   = 0
@@ -322,6 +324,94 @@ class App:
         # Bind clicking the birthday label to allow a new date to be visualised.
         self.birthday.bind("<Button-1>", lambda event: self.open_birthday_popup())
 
+    def _load_icon(self, path: str, size: tuple = (20, 20)) -> ImageTk.PhotoImage:
+        '''
+        Loads and resizes an icon image for use on a toolbar button.
+
+        @param path : Path to the icon image file.
+        @param size : (width, height) in pixels to resize the icon to.
+        @return      : A Tk-compatible PhotoImage.
+        '''
+        icon = Image.open(path)
+        icon = icon.resize(size)
+        return ImageTk.PhotoImage(icon)
+
+    def _make_icon_button(self, parent, photo_image: ImageTk.PhotoImage) -> tk.Label:
+        '''
+        Builds a toolbar icon button (a Label acting as a button) with a
+        hover highlight so the user gets visual feedback before clicking.
+
+        @param parent      : The parent widget to attach the button to.
+        @param photo_image : The already-loaded icon image.
+        @return             : The created Label widget. Bind "<Button-1>" separately.
+        '''
+        btn = tk.Label(
+            parent,
+            image=photo_image,
+            bg=BG,
+            cursor='hand2',
+            pady=2)
+        btn.image = photo_image  # Prevent garbage collection.
+
+        hover_bg = FUTURE_COLOR
+
+        def _on_enter(event):
+            event.widget.configure(bg=hover_bg)
+
+        def _on_leave(event):
+            event.widget.configure(bg=BG)
+
+        btn.bind("<Enter>", _on_enter)
+        btn.bind("<Leave>", _on_leave)
+
+        return btn
+
+    def _toggle_theme(self):
+        '''
+        First-pass light/dark mode toggle. Walks every widget under the root
+        window and swaps any background/foreground colour that matches the
+        "old" theme's colours for the equivalent colour in the "new" theme.
+        This is a generic approach so we don't have to individually track
+        every label/frame that gets created throughout the UI.
+
+        @param  : N/A
+        @return : N/A
+        @raise  : N/A
+        '''
+        if getattr(self, '_dark_mode', True):
+            # Switching TO light mode.
+            colour_map = {
+                BG:           '#f2f2f7',
+                FUTURE_COLOR: '#d1d1d6',
+                TEXT_FG:      '#1c1c1e',
+            }
+            self._dark_mode = False
+        else:
+            # Switching back TO dark mode.
+            colour_map = {
+                '#f2f2f7': BG,
+                '#d1d1d6': FUTURE_COLOR,
+                '#1c1c1e': TEXT_FG,
+            }
+            self._dark_mode = True
+
+        def _walk(widget):
+            for option in ('bg', 'fg', 'background', 'foreground'):
+                try:
+                    current = widget.cget(option)
+                except tk.TclError:
+                    continue
+                new_colour = colour_map.get(current)
+                if new_colour:
+                    try:
+                        widget.configure(**{option: new_colour})
+                    except tk.TclError:
+                        pass
+            for child in widget.winfo_children():
+                _walk(child)
+
+        _walk(self.root)
+
     def _build_controls(self):
         '''
         The controls section which enables the user to type their birthday,
@@ -346,60 +436,25 @@ class App:
         tool_frame.columnconfigure([0,4], weight=3)
 
         # OPEN FILE BUTTON TO IMPORT SAVED FILES
-        # TODO: move the handling of these button images to another function.
-        open_folder_icon = Image.open("icons/open_white.png")
-        open_folder_icon = open_folder_icon.resize((20,20))
-        self.open_folder_image = ImageTk.PhotoImage(open_folder_icon)
+        self.open_folder_image = self._load_icon("icons/open_white.png")
 
-        open_button = tk.Label(
-            tool_frame,
-            image=self.open_folder_image,
-            bg=BG,
-            cursor='hand2',
-            pady=2)
+        open_button = self._make_icon_button(tool_frame, self.open_folder_image)
         open_button.grid(row=0, column=1, padx=5, ipadx=10)
-
-        # Required so the image doesn't get garbae collected.
-        open_button.image = self.open_folder_image
-
-        # Bind label to call the load data function
         open_button.bind("<Button-1>", lambda event: self.load_data())
-        # TODO: add function to update cursor to hover. open_button.bind("<Enter>", )
 
         # SAVE VISUALISATION BUTTON
-        save_icon = Image.open("icons/save_white.png")
-        save_icon = save_icon.resize((20,20))
-        save_icon_image = ImageTk.PhotoImage(save_icon)
+        self.save_icon_image = self._load_icon("icons/save_white.png")
 
-        save_button = tk.Label(
-            tool_frame,
-            image=save_icon_image,
-            bg=BG,
-            fg='white',
-            cursor='hand2',
-            pady=2)
+        save_button = self._make_icon_button(tool_frame, self.save_icon_image)
         save_button.grid(row=0, column=2, padx=5, ipadx=10)
-
-        save_button.image = save_icon_image
-
         save_button.bind("<Button-1>", lambda event: self.save_data())
 
         # Light and dark mode toggle.
-        theme_icon = Image.open("icons/light mode.png")
-        theme_icon = theme_icon.resize((20,20))
-        theme_icon_image = ImageTk.PhotoImage(theme_icon)
+        self.theme_icon_image = self._load_icon("icons/light mode.png")
 
-        theme_button = tk.Label(
-            tool_frame,
-            bg=BG,
-            image=theme_icon_image,
-            cursor='hand2',
-            pady=2)
+        theme_button = self._make_icon_button(tool_frame, self.theme_icon_image)
         theme_button.grid(row=0, column=3, padx=5, ipadx=10)
-
-        theme_button.image = theme_icon_image
-
-        # TODO: create the binding to update the ui theme.
+        theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
         
         # Spacer
         tk.Frame(frame, bg=BG, height=100).pack(anchor='center', fill='both', expand=True)
@@ -550,7 +605,8 @@ class App:
                     fill=FUTURE_COLOR,
                     outline=''
                 )
-                cell = Week_Cell((year + week), year, week, "past", FUTURE_COLOR, rect)
+                week_num = year * COLS + week
+                cell = Week_Cell(week_num, year, week, "past", FUTURE_COLOR, rect)
                 self.week_cells.append(cell)
                     
                 row.append(rect)
@@ -594,20 +650,84 @@ class App:
         for year, row_boxes in enumerate(self._boxes):
             for week, rect in enumerate(row_boxes):
                 n = year * COLS + week
-                if n in self._week_labels:
-                    color = self._custom_labels[self._week_labels[n]]['color']
-                elif n < weeks_lived - 1:
-                    color = PAST_COLOR
-                elif n == weeks_lived - 1:
-                    color = NOW_COLOR
-                else:
-                    color = FUTURE_COLOR
+                color = self._colour_for_week(n, weeks_lived)
                 self.canvas.itemconfig(rect, fill=color)
+
+                # Keep the Week_Cell object in sync with what's on screen.
+                if n < len(self.week_cells):
+                    wc = self.week_cells[n]
+                    wc.colour = color
+                    note = self._week_notes.get(n)
+                    if note:
+                        wc.description = note.get('description', '')
+                        wc.image_paths = list(note.get('image_paths') or [])
+                        wc.category    = note.get('category', 'Select Category')
 
         # Update the year labels
         birth_year = int(self.dob_var.get()[0:4])
         for i, label_id in enumerate(self.years_labels):
             self.canvas.itemconfig(label_id, text= str(birth_year + (5*i)))
+
+    def _colour_for_week(self, week_num: int, weeks_lived: int = None) -> str:
+        '''
+        Works out which colour a given week square should be, in priority order:
+        1) an explicit custom legend label assigned to the week.
+        2) the event category colour chosen for a saved week note.
+        3) the default past / current / future colour based on the date of birth.
+
+        @param week_num    : The week index (year * COLS + week).
+        @param weeks_lived : Optionally pass a pre-computed weeks_lived to avoid recalculating.
+        @return             : A hex colour string.
+        '''
+        if week_num in self._week_labels:
+            return self._custom_labels[self._week_labels[week_num]]['color']
+
+        note = self._week_notes.get(week_num)
+        if note:
+            category = note.get('category')
+            if category and category in event_type_colours and category != "Select Category":
+                return event_type_colours[category]
+
+        if weeks_lived is None:
+            weeks_lived = self._weeks_lived
+
+        if week_num < weeks_lived - 1:
+            return PAST_COLOR
+        elif week_num == weeks_lived - 1:
+            return NOW_COLOR
+        else:
+            return FUTURE_COLOR
+
+    def _apply_week_colour(self, week_num: int):
+        '''
+        Recomputes and immediately paints a single week square on the canvas,
+        keeping the matching Week_Cell object's colour attribute in sync.
+        Used after saving/clearing a week note so the grid updates without
+        needing a full re-render of every cell.
+
+        @param week_num : The week index (year * COLS + week).
+        @return          : N/A
+        '''
+        row, col = divmod(week_num, COLS)
+        if not (0 <= row < len(self._boxes) and 0 <= col < COLS):
+            return
+
+        colour = self._colour_for_week(week_num)
+        rect = self._boxes[row][col]
+        self.canvas.itemconfig(rect, fill=colour)
+
+        if week_num < len(self.week_cells):
+            wc = self.week_cells[week_num]
+            wc.colour = colour
+            note = self._week_notes.get(week_num)
+            if note:
+                wc.description = note.get('description', '')
+                wc.image_paths = list(note.get('image_paths') or [])
+                wc.category    = note.get('category', 'Select Category')
+            else:
+                wc.description = ''
+                wc.image_paths = []
+                wc.category    = 'Select Category'
 
     # ── Grid interaction ──────────────────────────────────────────────────────
     def _open_week_popup(self, event: tk.Event):
@@ -676,6 +796,8 @@ class App:
         has_note    = self._has_note_data(note)
         label_entry = (self._custom_labels[self._week_labels[week_num]]
                        if week_num in self._week_labels else None)
+        category    = note.get('category') if note else None
+        has_category = bool(category and category != 'Select Category')
 
         win = tk.Toplevel(self.root)
         win.overrideredirect(True)
@@ -687,6 +809,7 @@ class App:
         tk.Label(win, text=header, bg=BG, fg=TEXT_FG,
                  font=('Arial', BODY)).pack(anchor='w', padx=pad, pady=(pad, 2))
 
+        # Legend label swatch (if this week belongs to a custom label).
         if label_entry:
             lf = tk.Frame(win, bg=BG)
             lf.pack(anchor='w', padx=pad, pady=(0, 4))
@@ -696,28 +819,52 @@ class App:
             tk.Label(lf, text=label_entry['name'], bg=BG, fg=TEXT_FG,
                      font=('Arial', BODY)).pack(side='left')
 
+        # Event category swatch (colour picked from the event type combobox).
+        if has_category:
+            cf = tk.Frame(win, bg=BG)
+            cf.pack(anchor='w', padx=pad, pady=(0, 4))
+            dot = tk.Canvas(cf, width=10, height=10, bg=BG, highlightthickness=0)
+            dot.create_rectangle(0, 0, 10, 10,
+                                  fill=event_type_colours.get(category, PAST_COLOR),
+                                  outline='')
+            dot.pack(side='left', padx=(0, 5))
+            tk.Label(cf, text=category, bg=BG, fg=TEXT_FG,
+                     font=('Arial', BODY)).pack(side='left')
+
         if has_note:
             body = tk.Frame(win, bg=BG)
             body.pack(fill='x', padx=pad, pady=(4, pad))
 
-            # TODO: update to support multiple file paths.
-            img_path = note.get('image_path')
-            if img_path and os.path.isfile(img_path):
+            # Render every saved image (up to 4) as small thumbnails in a row.
+            img_paths = [p for p in (note.get('image_paths') or [])
+                         if p and os.path.isfile(p)]
+            if img_paths:
+                images_frame = tk.Frame(body, bg=BG)
+                images_frame.pack(side='left', padx=(0, 10), anchor='n')
+
                 if week_num not in self._photo_cache:
-                    try:
-                        img = Image.open(img_path)
-                        img.thumbnail((300, 180))
-                        self._photo_cache[week_num] = ImageTk.PhotoImage(img)
-                    except Exception:
-                        pass
-                if week_num in self._photo_cache:
-                    tk.Label(body, image=self._photo_cache[week_num],
-                             bg=BG).pack(side='left', padx=(0, 10))
+                    thumbs = []
+                    for p in img_paths[:4]:
+                        try:
+                            img = Image.open(p)
+                            img.thumbnail((110, 110))
+                            thumbs.append(ImageTk.PhotoImage(img))
+                        except Exception:
+                            pass
+                    self._photo_cache[week_num] = thumbs
+
+                thumbs = self._photo_cache.get(week_num, [])
+                # Lay thumbnails out 2-per-row so the tooltip doesn't get too wide.
+                for i, photo in enumerate(thumbs):
+                    r, c = divmod(i, 2)
+                    lbl = tk.Label(images_frame, image=photo, bg=BG)
+                    lbl.image = photo
+                    lbl.grid(row=r, column=c, padx=2, pady=2)
 
             desc = note.get('description', '').strip()
             if desc:
                 tk.Label(body, text=desc, bg=BG, fg=TEXT_FG,
-                         font=('Arial', BODY), wraplength=220,
+                         font=('Arial', BODY), wraplength=180,
                          justify='left').pack(side='left', anchor='n')
         else:
             tk.Frame(win, bg=BG, height=pad).pack()
@@ -737,7 +884,12 @@ class App:
     # ── Note dialog ───────────────────────────────────────────────────────────
 
     def _has_note_data(self, note) -> bool:
-        return bool(note and (note.get('description') or note.get('image_path')))
+        if not note:
+            return False
+        has_description = bool(note.get('description'))
+        has_images       = bool(note.get('image_paths'))
+        has_category     = bool(note.get('category') and note.get('category') != 'Select Category')
+        return has_description or has_images or has_category
 
     def update_popup_background(self, event=None):
             event_type = self.event_type_dropdown.get()
@@ -979,13 +1131,25 @@ class App:
         self.popup_widgets.append(btn_row)
 
         def _save():
-            desc = description_box.get('1.0', 'end').strip()
-            self._week_notes[week_num] = {
-                'description' : desc,
-                'image_path'  : chosen_paths,
-                'category'    : self.event_type_dropdown.get(),
-            }
+            desc     = description_box.get('1.0', 'end').strip()
+            category = self.event_type_dropdown.get()
+
+            # Only keep the note around if there's actually something to show.
+            if desc or chosen_paths or (category and category != "Select Category"):
+                self._week_notes[week_num] = {
+                    'description'  : desc,
+                    'image_paths'  : list(chosen_paths),
+                    'category'     : category,
+                }
+            else:
+                self._week_notes.pop(week_num, None)
+
             self._photo_cache.pop(week_num, None)
+
+            # Repaint this week's square with the event category colour (or the
+            # default past/current/future colour if no category was chosen) and
+            # keep the Week_Cell object's metadata in sync.
+            self._apply_week_colour(week_num)
 
             # Close the popup
             self.week_note_popup.destroy()
@@ -994,6 +1158,14 @@ class App:
             self._week_notes.pop(week_num, None)
             self._photo_cache.pop(week_num, None)
             self.event_type_dropdown.set("Select Category")
+            self.update_popup_background()
+
+            chosen_paths.clear()
+            description_box.delete('1.0', 'end')
+            _load_previews()
+
+            # Repaint the square back to its default colour immediately.
+            self._apply_week_colour(week_num)
 
         cancel_popup_button = tk.Button(
             btn_row,
@@ -1030,6 +1202,11 @@ class App:
             font=('Futura-PT', LABEL, 'bold'),
             padx=14)
         save_popup_button.grid(row=0, column=2, sticky='nsew')
+
+        # Now that every themed widget has been created and registered in
+        # popup_widgets, apply the background colour for any pre-existing
+        # category (e.g. reopening a week that was already saved).
+        self.update_popup_background()
 
     # ── Update Birthday ───────────────────────────────────────────────────────────
 
@@ -1090,25 +1267,40 @@ class App:
         def update_name(event=None):
             birthday = ent_name.get().strip()
             if not birthday:
-                messagebox.showwarning("Warning", "Please enter a project name!", parent=popup)
+                messagebox.showwarning("Warning", "Please enter a birthday!", parent=popup)
                 return
-            
-            # TODO: Validate birthday
-            
 
-            # Update birthday label
+            # Validate the birthday - expects DD-MM-YYYY as labelled on the field.
             try:
-                self.birthday.config(text=birthday)
-                self.dob_var.set(birthday)
+                parsed = datetime.strptime(birthday, "%d-%m-%Y").date()
+            except ValueError:
+                messagebox.showwarning(
+                    "Warning",
+                    "Please enter the birthday as DD-MM-YYYY, e.g. 15-10-1998.",
+                    parent=popup)
+                return
+
+            if parsed > date.today():
+                messagebox.showwarning(
+                    "Warning",
+                    "Birthday can't be in the future.",
+                    parent=popup)
+                return
+
+            # Update birthday label (shown as entered) and the internal ISO
+            # value used for all of the date maths / grid rendering.
+            try:
+                self.birthday.config(text=parsed.strftime("%d-%m-%Y"))
+                self.dob_var.set(parsed.isoformat())
                 self._refresh()
             except ValueError:
                 messagebox.showwarning("Warning", "Could not update birthday, please try again.", parent=self.root)
                 return
                 
-            self.popup.destroy()
+            popup.destroy()
         
-        def close_popup(self):
-            self.popup.destroy()
+        def close_popup(event=None):
+            popup.destroy()
 
         # Create confirm and quit buttons
         btn_frame = tk.Frame(popup)
@@ -1132,8 +1324,8 @@ class App:
         btn_create.grid(row=0, column=2, padx=(5,0))
 
         # Bind keyboard inputs
-        self.popup.bind("<Escape>", close_popup)
-        self.popup.bind("<Return>", update_name)
+        popup.bind("<Escape>", close_popup)
+        popup.bind("<Return>", update_name)
 
     # ── Save / Load ───────────────────────────────────────────────────────────
 
@@ -1151,16 +1343,21 @@ class App:
 
         serialised_notes = {}
         for wn, note in self._week_notes.items():
-            entry   = {'description': note.get('description', '')}
-            img_src = note.get('image_path')
-            if img_src and os.path.isfile(img_src):
-                os.makedirs(assets_dir, exist_ok=True)
-                ext      = os.path.splitext(img_src)[1]
-                dst_name = f'week_{wn}{ext}'
-                shutil.copy2(img_src, os.path.join(assets_dir, dst_name))
-                entry['image_path'] = os.path.join('_assets', dst_name)
-            else:
-                entry['image_path'] = None
+            entry = {
+                'description' : note.get('description', ''),
+                'category'    : note.get('category', 'Select Category'),
+            }
+
+            img_sources = note.get('image_paths') or []
+            rel_paths   = []
+            for i, img_src in enumerate(img_sources[:4]):
+                if img_src and os.path.isfile(img_src):
+                    os.makedirs(assets_dir, exist_ok=True)
+                    ext      = os.path.splitext(img_src)[1]
+                    dst_name = f'week_{wn}_{i}{ext}'
+                    shutil.copy2(img_src, os.path.join(assets_dir, dst_name))
+                    rel_paths.append(os.path.join('_assets', dst_name))
+            entry['image_paths'] = rel_paths
             serialised_notes[str(wn)] = entry
 
         payload = {
@@ -1193,13 +1390,26 @@ class App:
         json_dir = os.path.dirname(os.path.abspath(path))
         self._week_notes = {}
         for wn_str, note in payload.get('week_notes', {}).items():
-            entry    = {'description': note.get('description', '')}
-            rel_path = note.get('image_path')
-            if rel_path:
+            entry = {
+                'description' : note.get('description', ''),
+                'category'    : note.get('category', 'Select Category'),
+            }
+
+            # Support both the new multi-image key and the legacy single-image key.
+            rel_paths = note.get('image_paths')
+            if rel_paths is None:
+                legacy = note.get('image_path')
+                rel_paths = [legacy] if legacy else []
+
+            abs_paths = []
+            for rel_path in rel_paths:
+                if not rel_path:
+                    continue
                 abs_path = os.path.join(json_dir, rel_path)
-                entry['image_path'] = abs_path if os.path.isfile(abs_path) else None
-            else:
-                entry['image_path'] = None
+                if os.path.isfile(abs_path):
+                    abs_paths.append(abs_path)
+            entry['image_paths'] = abs_paths
+
             self._week_notes[int(wn_str)] = entry
 
         self._photo_cache.clear()
