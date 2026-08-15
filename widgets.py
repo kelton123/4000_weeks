@@ -50,13 +50,76 @@ class ButtonImage(tk.Label):
 
     def on_enter(self, event):
         ''' Update the background colour to indicate hovering. '''
-        if not self.is_active:
-            self.config(bg = styles.FUTURE_COLOR)
+        self.config(bg = styles.FUTURE_COLOR)
         
     def on_leave(self, event):
         ''' Update the background colour to the default. '''
-        if not self.is_active:
-            self.config(bg = styles.BG)
+        self.config(bg = styles.BG)
+
+
+# ── LABEL WIDGETS ────────────────────────────────────────────────────────────
+
+# Header 01
+class H1Label(tk.Label):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font" : styles.H1,
+            "fg"   : styles.TEXT_FG,
+            "bg"   : styles.BG,
+            
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+# Header 02
+class H2Label(tk.Label):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font" : styles.H2,
+            "fg"   : styles.TEXT_FG,
+            "bg"   : styles.BG,
+            
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+# Header 03
+class H3Label(tk.Label):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font" : styles.H3,
+            "fg"   : styles.TEXT_FG,
+            "bg"   : styles.BG,
+            
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+
+# Body Text
+class BodyLabel(tk.Label):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font" : styles.BODY,
+            "fg"   : styles.TEXT_FG,
+            "bg"   : styles.BG,
+            
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+
+# Caption Text
+class CaptionLabel(tk.Label):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font" : styles.LABEL,
+            "fg"   : styles.TEXT_FG,
+            "bg"   : styles.BG,
+            
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
 
 
 # ── WEEK CELL WIDGET ────────────────────────────────────────────────────────────

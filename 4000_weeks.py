@@ -88,11 +88,12 @@ class App:
         scrollbar.pack(side='right', fill='y')
 
         # Create the parent page to contain all of the subsections.
-        self._page = tk.Canvas(self.root,
-                               bg                   =styles.BG,
-                               highlightthickness   =0,
-                               yscrollcommand       =scrollbar.set
-                               )
+        self._page = tk.Canvas(
+            self.root,
+            bg                   = styles.BG,
+            highlightthickness   = 0,
+            yscrollcommand       = scrollbar.set
+            )
         self._page.pack(side='left', fill='both', expand=True)
         scrollbar.config(command=self._page.yview)
 
@@ -147,7 +148,7 @@ class App:
         frame.pack_propagate(False)
 
         # The active birthday - default text is "Add birthday".
-        self.birthday = tk.Label(frame, text="Add birthday", bg=styles.BG, fg=styles.TEXT_FG, font=styles.H1)
+        self.birthday = widgets.H1Label(frame, text="Add Birthday")
         self.birthday.pack()
 
         # Bind clicking the birthday label to allow a new date to be visualised.
@@ -238,21 +239,21 @@ class App:
         self.open_folder_image = self._load_icon("icons/open_white.png")
 
         open_button = widgets.ButtonImage(tool_frame, image=self.open_folder_image)
-        open_button.grid(row=0, column=1, padx=5, ipadx=10)
+        open_button.grid(row=0, column=1, padx=5, ipadx=10, ipady=10)
         open_button.bind("<Button-1>", lambda event: self.load_data())
 
         # SAVE VISUALISATION BUTTON
         self.save_icon_image = self._load_icon("icons/save_white.png")
 
         save_button = widgets.ButtonImage(tool_frame, image=self.save_icon_image)
-        save_button.grid(row=0, column=2, padx=5, ipadx=10)
+        save_button.grid(row=0, column=2, padx=5, ipadx=10, ipady=10)
         save_button.bind("<Button-1>", lambda event: self.save_data())
 
         # Light and dark mode toggle.
         self.theme_icon_image = self._load_icon("icons/light mode.png")
 
         theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image)
-        theme_button.grid(row=0, column=3, padx=5, ipadx=10)
+        theme_button.grid(row=0, column=3, padx=5, ipadx=10, ipady=10)
         theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
         
         # Spacer
@@ -268,25 +269,14 @@ class App:
         stats_frame.pack(fill="both", expand=True)
 
         for i, key in enumerate(('Weeks Lived', 'Years Remaining', 'Life Complete')):
-            tk.Label(
-                stats_frame,
-                text=key,
-                bg=styles.BG,
-                fg=styles.TEXT_FG,
-                font=styles.LABEL
-                ).grid(row=0, column=i, padx=40)
-            
-            v = tk.StringVar(value='—')
+            # Small caption text for the type of statistic.
+            widgets.CaptionLabel(stats_frame, text=key).grid(row=0, column=i, padx=40)
 
+            # Declare the statistic variable to be populated based on the birthday.
+            v = tk.StringVar(value='—')
             self._stat_vars[key] = v
 
-            tk.Label(
-                stats_frame,
-                textvariable=v,
-                bg=styles.BG,
-                fg=styles.TEXT_FG,
-                font=styles.H2
-                ).grid(row=1, column=i, padx=40)
+            widgets.H2Label(stats_frame, textvariable=v).grid(row=1, column=i, padx=40)
 
         # Spacer
         tk.Frame(frame, bg=styles.BG, height=100).pack(anchor='center', fill='both', expand=True)
