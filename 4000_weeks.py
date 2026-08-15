@@ -97,7 +97,7 @@ class App:
         self._page.pack(side='left', fill='both', expand=True)
         scrollbar.config(command=self._page.yview)
 
-        self._content = tk.Frame(self._page, bg=styles.BG)
+        self._content = widgets.Frame(self._page)
         self._win_id  = self._page.create_window(
             0,
             0,
@@ -143,7 +143,7 @@ class App:
         '''
 
         # Create a frame to keep the header section the same width as the grid section.
-        frame = tk.Frame(self._content, width=styles.CANVAS_WIDTH, height=80, bg=styles.BG)
+        frame = widgets.Frame(self._content, width=styles.CANVAS_WIDTH, height=80)
         frame.pack(pady=(100, 2))
         frame.pack_propagate(False)
 
@@ -224,14 +224,14 @@ class App:
         '''
         # Container frame for the controls to maintain the grid width and left
         # align the buttons and right align the stats.
-        frame = tk.Frame(self._content, bg=styles.BG, width=styles.CANVAS_WIDTH, height=100)
+        frame = widgets.Frame(self._content, width=styles.CANVAS_WIDTH, height=100)
         frame.pack(pady=(6, 10))
 
         # Default birthday value.
         self.dob_var = tk.StringVar(value='1998-10-15')
 
         # Frame for the tools.
-        tool_frame = tk.Frame(frame, bg=styles.BG, height=40, width=styles.CANVAS_WIDTH)
+        tool_frame = widgets.Frame(frame, height=40, width=styles.CANVAS_WIDTH)
         tool_frame.pack(anchor='center', fill='x', expand=True)
         tool_frame.columnconfigure([0,4], weight=3)
 
@@ -257,7 +257,7 @@ class App:
         theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
         
         # Spacer
-        tk.Frame(frame, bg=styles.BG, height=100).pack(anchor='center', fill='both', expand=True)
+        widgets.FrameSpacerH100(frame).pack(anchor='center', fill='both', expand=True)
 
         # Stats about the 4000 weeks visualisation. 
         self._stat_vars: dict[str, tk.StringVar] = {}
@@ -265,7 +265,7 @@ class App:
         # The lifespace that is used to generate the grid.
         self.life_var = tk.StringVar(value='80')
 
-        stats_frame = tk.Frame(frame, bg=styles.BG)
+        stats_frame = widgets.Frame(frame)
         stats_frame.pack(fill="both", expand=True)
 
         for i, key in enumerate(('Weeks Lived', 'Years Remaining', 'Life Complete')):
@@ -279,10 +279,10 @@ class App:
             widgets.H2Label(stats_frame, textvariable=v).grid(row=1, column=i, padx=40)
 
         # Spacer
-        tk.Frame(frame, bg=styles.BG, height=100).pack(anchor='center', fill='both', expand=True)
+        widgets.FrameSpacerH100(frame).pack(anchor='center', fill='both', expand=True)
 
     def _build_grid(self):
-        outer = tk.Frame(self._content, bg=styles.BG)
+        outer = widgets.Frame(self._content)
         outer.pack(pady=(0, 20))
 
         self.canvas = tk.Canvas(
@@ -325,7 +325,7 @@ class App:
         self.canvas.bind('<Button-1>',        self._open_week_popup)
 
     def _build_footer(self):
-        footer_frame = tk.Frame(self._content, bg=styles.BG)
+        footer_frame = widgets.Frame(self._content)
         footer_frame.pack(pady=(22, 50))
         widgets.CaptionLabel(footer_frame, text="Designed & Developed by Kelton Boyter-Grant").pack()
 
@@ -516,7 +516,7 @@ class App:
 
         # Legend label swatch (if this week belongs to a custom label).
         if label_entry:
-            lf = tk.Frame(win, bg=styles.BG)
+            lf = widgets.Frame(win)
             lf.pack(anchor='w', padx=pad, pady=(0, 4))
             dot = tk.Canvas(lf, width=10, height=10, bg=styles.BG, highlightthickness=0)
             dot.create_rectangle(0, 0, 10, 10, fill=label_entry['color'], outline='')
@@ -525,7 +525,7 @@ class App:
 
         # Event category swatch (colour picked from the event type combobox).
         if has_category:
-            cf = tk.Frame(win, bg=styles.BG)
+            cf = widgets.Frame(win)
             cf.pack(anchor='w', padx=pad, pady=(0, 4))
             dot = tk.Canvas(cf, width=10, height=10, bg=styles.BG, highlightthickness=0)
             dot.create_rectangle(0, 0, 10, 10,
@@ -535,14 +535,14 @@ class App:
             widgets.BodyLabel(cf, text=category).pack(side='left')
 
         if has_note:
-            body = tk.Frame(win, bg=styles.BG)
+            body = widgets.Frame(win)
             body.pack(fill='x', padx=pad, pady=(4, pad))
 
             # Render every saved image (up to 4) as small thumbnails in a row.
             img_paths = [p for p in (note.get('image_paths') or [])
                          if p and os.path.isfile(p)]
             if img_paths:
-                images_frame = tk.Frame(body, bg=styles.BG)
+                images_frame = widgets.Frame(body)
                 images_frame.pack(side='left', padx=(0, 10), anchor='n')
 
                 if week_num not in self._photo_cache:
@@ -568,7 +568,7 @@ class App:
             if desc:
                 widgets.BodyLabel(body, text=desc, wraplength=180, justify='left').pack(side='left', anchor='n')
         else:
-            tk.Frame(win, bg=styles.BG, height=pad).pack()
+            widgets.Frame(win, height=pad).pack()
 
         win.update_idletasks()
         win.geometry(f'+{screen_x + 14}+{screen_y + 14}')
@@ -651,7 +651,7 @@ class App:
             self.event_type_dropdown.set(existing['category'])
 
         # ── Image row ─────────────────────────────────────────────
-        img_row = tk.Frame(self.week_note_popup, bg=styles.BG)
+        img_row = widgets.Frame(self.week_note_popup)
         img_row.pack(fill='x', pady=10, anchor="n")
 
         self.popup_widgets.append(img_row)
@@ -804,7 +804,7 @@ class App:
             description_box.insert('1.0', existing['description'])
 
         # ── Buttons ───────────────────────────────────────────────
-        btn_row = tk.Frame(self.week_note_popup, bg=styles.BG)
+        btn_row = widgets.Frame(self.week_note_popup)
         btn_row.pack(fill='x', expand=True, anchor="s")
         btn_row.columnconfigure((0,1,2), weight=1)
 
@@ -956,7 +956,7 @@ class App:
             popup.destroy()
 
         # CONFIRM AND CLOSE BUTTON
-        btn_frame = tk.Frame(popup, bg=styles.BG)
+        btn_frame = widgets.Frame(popup)
         btn_frame.grid(row=1, column=0, columnspan=2, sticky="sew", pady=(20,0))
         btn_frame.columnconfigure(0, weight=1)
 

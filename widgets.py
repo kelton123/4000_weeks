@@ -2,6 +2,27 @@ import tkinter as tk
 import styles
 
 
+# ── FRAME WIDGETS ────────────────────────────────────────────────────────────
+
+# Default frame with minimal customisation.
+class Frame(tk.Frame):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "bg" : styles.BG
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+# Default frame with minimal customisation.
+class FrameSpacerH100(tk.Frame):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "bg"     : styles.BG,
+            "height" : 100
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
 # ── BUTTON WIDGETS ────────────────────────────────────────────────────────────
 
 # Text button default.
