@@ -492,88 +492,6 @@ class App:
         # Spacer
         tk.Frame(frame, bg=BG, height=100).pack(anchor='center', fill='both', expand=True)
 
-    def _build_legend(self):
-        self._legend_frame = tk.Frame(self._content, bg= BG, width= CANVAS_WIDTH, height= 40)
-        self._legend_frame.pack(pady=(0, 30))
-        self._legend_frame.pack_propagate(False)
-        self._label_name_var = tk.StringVar()
-        self._rebuild_legend()
-
-    def _rebuild_legend(self):
-        for widget in self._legend_frame.winfo_children():
-            widget.destroy()
-
-        # Default colour entries
-        for color, label in DEFAULT_LABEL_COLOURS:
-            dot = tk.Canvas(self._legend_frame, width=BOX, height=BOX,
-                            bg=BG, highlightthickness=0)
-            dot.create_rectangle(0, 0, BOX, BOX, fill=color, outline='')
-            dot.pack(side='left', padx=(0, 5))
-            tk.Label(self._legend_frame, text=label, bg=BG, fg=TEXT_FG,
-                     font=('Arial', LABEL)).pack(side='left', padx=(0, 18))
-
-        # Custom label entries with × buttons
-        for idx, lbl in enumerate(self._custom_labels):
-            dot = tk.Canvas(self._legend_frame, width=BOX, height=BOX,
-                            bg=BG, highlightthickness=0)
-            dot.create_rectangle(0, 0, BOX, BOX, fill=lbl['color'], outline='')
-            dot.pack(side='left', padx=(0, 4))
-            tk.Label(self._legend_frame, text=lbl['name'], bg=BG, fg=TEXT_FG,
-                     font=('Arial', LABEL)).pack(side='left', padx=(0, 2))
-            tk.Button(self._legend_frame, text='×', bg=BG, fg=TEXT_FG,
-                      relief='flat', cursor='hand2', font=('Arial', LABEL),
-                      command=lambda i=idx: self._remove_custom_label(i),
-                      padx=2, pady=0).pack(side='left', padx=(0, 14))
-
-        # Divider
-        tk.Frame(self._legend_frame, bg=FUTURE_COLOR, width=2, height=18).pack(
-            side='left', padx=(0, 25))
-
-        # New label entry + add button
-        self._label_name_var.set('')
-        tk.Entry(self._legend_frame, textvariable=self._label_name_var,
-                 bg=FUTURE_COLOR, fg=TEXT_FG, insertbackground=TEXT_FG,
-                 relief='flat', font=('Arial', LABEL), width=12,
-                 ).pack(side='left', padx=(0, 6), ipady=2)
-
-        tk.Button(self._legend_frame, text='+', command=self._add_custom_label,
-                  bg=FUTURE_COLOR, fg='white', relief='flat', cursor='hand2',
-                  font=('Arial', LABEL, 'bold'), pady=0,
-                  ).pack(side='left', ipadx=4)
-
-        self._fix_scrollregion()
-
-    def _add_custom_label(self):
-        name = self._label_name_var.get().strip()
-        if not name:
-            return
-        used = {lbl['color'].lower() for lbl in self._custom_labels}
-        used |= {PAST_COLOR.lower(), NOW_COLOR.lower(), FUTURE_COLOR.lower()}
-        available = [c for c in PALETTE if c.lower() not in used]
-        if not available:
-            messagebox.showwarning("No colours left",
-                                   "All palette colours are already in use.")
-            return
-        self._custom_labels.append({'name': name, 'color': random.choice(available)})
-        self._rebuild_legend()
-
-    def _remove_custom_label(self, idx: int):
-        # Reset any weeks that used this label
-        weeks_to_reset = [wn for wn, li in self._week_labels.items() if li == idx]
-        for wn in weeks_to_reset:
-            row, col = divmod(wn, COLS)
-            self.canvas.itemconfig(self._boxes[row][col], fill=PAST_COLOR)
-            del self._week_labels[wn]
-
-        # Shift down indices for labels above the removed one
-        self._week_labels = {
-            wn: (li - 1 if li > idx else li)
-            for wn, li in self._week_labels.items()
-        }
-
-        self._custom_labels.pop(idx)
-        self._rebuild_legend()
-
     def _build_grid(self):
         outer = tk.Frame(self._content, bg=BG)
         outer.pack(pady=(0, 20))
@@ -1413,7 +1331,6 @@ class App:
             self._week_notes[int(wn_str)] = entry
 
         self._photo_cache.clear()
-        self._rebuild_legend()
         self._refresh()
 
 
