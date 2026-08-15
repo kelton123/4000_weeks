@@ -325,14 +325,9 @@ class App:
         self.canvas.bind('<Button-1>',        self._open_week_popup)
 
     def _build_footer(self):
-        f = tk.Frame(self._content, bg=styles.BG)
-        f.pack(pady=(22, 50))
-        tk.Label(
-            f,
-            text="Designed & Developed by Kelton Boyter-Grant",
-            bg=styles.BG,
-            fg=styles.TEXT_FG,
-            font=styles.LABEL).pack()
+        footer_frame = tk.Frame(self._content, bg=styles.BG)
+        footer_frame.pack(pady=(22, 50))
+        widgets.CaptionLabel(footer_frame, text="Designed & Developed by Kelton Boyter-Grant").pack()
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
@@ -517,13 +512,7 @@ class App:
 
         pad = 10
 
-        tk.Label(
-            win,
-            text=header,
-            bg=styles.BG,
-            fg=styles.TEXT_FG,
-            font=styles.BODY
-            ).pack(anchor='w', padx=pad, pady=(pad, 2))
+        widgets.BodyLabel(win, text=header).pack(anchor='w', padx=pad, pady=(pad, 2))
 
         # Legend label swatch (if this week belongs to a custom label).
         if label_entry:
@@ -532,8 +521,7 @@ class App:
             dot = tk.Canvas(lf, width=10, height=10, bg=styles.BG, highlightthickness=0)
             dot.create_rectangle(0, 0, 10, 10, fill=label_entry['color'], outline='')
             dot.pack(side='left', padx=(0, 5))
-            tk.Label(lf, text=label_entry['name'], bg=styles.BG, fg=styles.TEXT_FG,
-                     font=styles.BODY).pack(side='left')
+            widgets.BodyLabel(lf, text=label_entry['name']).pack(side='left')
 
         # Event category swatch (colour picked from the event type combobox).
         if has_category:
@@ -544,8 +532,7 @@ class App:
                                   fill=styles.event_type_colours.get(category, styles.PAST_COLOR),
                                   outline='')
             dot.pack(side='left', padx=(0, 5))
-            tk.Label(cf, text=category, bg=styles.BG, fg=styles.TEXT_FG,
-                     font=styles.BODY).pack(side='left')
+            widgets.BodyLabel(cf, text=category).pack(side='left')
 
         if has_note:
             body = tk.Frame(win, bg=styles.BG)
@@ -573,21 +560,13 @@ class App:
                 # Lay thumbnails out 2-per-row so the tooltip doesn't get too wide.
                 for i, photo in enumerate(thumbs):
                     r, c = divmod(i, 2)
-                    lbl = tk.Label(images_frame, image=photo, bg=styles.BG)
+                    lbl = widgets.BodyLabel(images_frame, image=photo)
                     lbl.image = photo
                     lbl.grid(row=r, column=c, padx=2, pady=2)
 
             desc = note.get('description', '').strip()
             if desc:
-                tk.Label(
-                    body,
-                    text=desc,
-                    bg=styles.BG,
-                    fg=styles.TEXT_FG,
-                    font=styles.BODY,
-                    wraplength=180,
-                    justify='left'
-                    ).pack(side='left', anchor='n')
+                widgets.BodyLabel(body, text=desc, wraplength=180, justify='left').pack(side='left', anchor='n')
         else:
             tk.Frame(win, bg=styles.BG, height=pad).pack()
 
@@ -652,13 +631,7 @@ class App:
         self.week_note_popup.geometry(f'450x580+{(sw - 440) // 2}+{(sh - 320) // 2}')
 
         # Date information at the top of the popup.
-        date_title = tk.Label(
-            self.week_note_popup,
-            text=title_text,
-            bg=styles.BG,
-            fg=styles.TEXT_FG,
-            font=styles.H3
-            )
+        date_title = widgets.H3Label(self.week_note_popup, text=title_text)
         date_title.pack(anchor='w', pady=(0, 10))
 
         self.popup_widgets.append(date_title)
@@ -810,13 +783,7 @@ class App:
         add_images_button.grid(row=2, column=0, columnspan=3, sticky="nsew", pady=10)
 
         # ── Description ───────────────────────────────────────────
-        description_label = tk.Label(
-            self.week_note_popup,
-            text='Description',
-            bg=styles.BG,
-            fg=styles.TEXT_FG,
-            font=styles.LABEL
-            )
+        description_label = widgets.CaptionLabel(self.week_note_popup, text="Description")
         description_label.pack(anchor='w', pady=(10,5))
 
         self.popup_widgets.append(description_label)
@@ -941,7 +908,7 @@ class App:
         popup = self.create_popup(self.root, "Update Birthday", 450, 200)
 
         # Create a label for what the user has to input.
-        lbl_name = tk.Label(popup, text="Birthday DD-MM-YYYY:", font=styles.BODY, fg=styles.TEXT_FG, bg=styles.BG)
+        lbl_name = widgets.BodyLabel(popup, text="Birthday (DD-MM-YYYY)")
         lbl_name.grid(row=0, column=0, sticky="w", pady=(0,20))
 
         # Create an entry widget 
