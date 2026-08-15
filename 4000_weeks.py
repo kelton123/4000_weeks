@@ -165,36 +165,6 @@ class App:
         icon = icon.resize(size)
         return ImageTk.PhotoImage(icon)
 
-    def _make_icon_button(self, parent, photo_image: ImageTk.PhotoImage) -> tk.Label:
-        '''
-        Builds a toolbar icon button (a Label acting as a button) with a
-        hover highlight so the user gets visual feedback before clicking.
-
-        @param parent      : The parent widget to attach the button to.
-        @param photo_image : The already-loaded icon image.
-        @return             : The created Label widget. Bind "<Button-1>" separately.
-        '''
-        btn = tk.Label(
-            parent,
-            image=photo_image,
-            bg=styles.BG,
-            cursor='hand2',
-            pady=2)
-        btn.image = photo_image  # Prevent garbage collection.
-
-        hover_bg = styles.FUTURE_COLOR
-
-        def _on_enter(event):
-            event.widget.configure(bg=hover_bg)
-
-        def _on_leave(event):
-            event.widget.configure(bg=styles.BG)
-
-        btn.bind("<Enter>", _on_enter)
-        btn.bind("<Leave>", _on_leave)
-
-        return btn
-
     def _toggle_theme(self):
         '''
         First-pass light/dark mode toggle. Walks every widget under the root
@@ -267,21 +237,21 @@ class App:
         # OPEN FILE BUTTON TO IMPORT SAVED FILES
         self.open_folder_image = self._load_icon("icons/open_white.png")
 
-        open_button = self._make_icon_button(tool_frame, self.open_folder_image)
+        open_button = widgets.ButtonImage(tool_frame, image=self.open_folder_image)
         open_button.grid(row=0, column=1, padx=5, ipadx=10)
         open_button.bind("<Button-1>", lambda event: self.load_data())
 
         # SAVE VISUALISATION BUTTON
         self.save_icon_image = self._load_icon("icons/save_white.png")
 
-        save_button = self._make_icon_button(tool_frame, self.save_icon_image)
+        save_button = widgets.ButtonImage(tool_frame, image=self.save_icon_image)
         save_button.grid(row=0, column=2, padx=5, ipadx=10)
         save_button.bind("<Button-1>", lambda event: self.save_data())
 
         # Light and dark mode toggle.
         self.theme_icon_image = self._load_icon("icons/light mode.png")
 
-        theme_button = self._make_icon_button(tool_frame, self.theme_icon_image)
+        theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image)
         theme_button.grid(row=0, column=3, padx=5, ipadx=10)
         theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
         

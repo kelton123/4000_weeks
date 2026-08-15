@@ -1,6 +1,10 @@
 import tkinter as tk
 import styles
 
+
+# ── BUTTON WIDGETS ────────────────────────────────────────────────────────────
+
+# Text button default.
 class ButtonText(tk.Button):
     def __init__(self, parent, **kwargs):
         defaults = {
@@ -14,6 +18,7 @@ class ButtonText(tk.Button):
         defaults.update(kwargs)
         super().__init__(parent, **defaults)
 
+# Text button active.
 class ButtonTextActive(tk.Button):
     def __init__(self, parent, **kwargs):
         defaults = {
@@ -27,8 +32,34 @@ class ButtonTextActive(tk.Button):
         defaults.update(kwargs)
         super().__init__(parent, **defaults)
 
+# Icon button default
+class ButtonImage(tk.Label):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "bg"     : styles.BG,
+            "cursor" : "hand2",
+            "padx"   : 5,
+            "pady"   : 5
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
 
-# ── Week Cell Widget ────────────────────────────────────────────────────────────
+        # Bind the mouse entering and leaving to update the background colour.
+        self.bind("<Enter>", self.on_enter)
+        self.bind("<Leave>", self.on_leave)
+
+    def on_enter(self, event):
+        ''' Update the background colour to indicate hovering. '''
+        if not self.is_active:
+            self.config(bg = styles.FUTURE_COLOR)
+        
+    def on_leave(self, event):
+        ''' Update the background colour to the default. '''
+        if not self.is_active:
+            self.config(bg = styles.BG)
+
+
+# ── WEEK CELL WIDGET ────────────────────────────────────────────────────────────
 
 class Week_Cell:
     def __init__(
