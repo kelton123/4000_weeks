@@ -700,6 +700,7 @@ class App:
             body = tk.Frame(win, bg=BG)
             body.pack(fill='x', padx=pad, pady=(4, pad))
 
+            # TODO: update to support multiple file paths.
             img_path = note.get('image_path')
             if img_path and os.path.isfile(img_path):
                 if week_num not in self._photo_cache:
@@ -798,6 +799,9 @@ class App:
         self.event_type_dropdown.set("Select Category")
         self.event_type_dropdown.pack(fill="x", anchor="n", pady=10)
         self.event_type_dropdown.bind("<<ComboboxSelected>>", self.update_popup_background)
+
+        if existing.get("category"):
+            self.event_type_dropdown.set(existing['category'])
 
         # ── Image row ─────────────────────────────────────────────
         img_row = tk.Frame(self.week_note_popup, bg=BG)
@@ -977,8 +981,9 @@ class App:
         def _save():
             desc = description_box.get('1.0', 'end').strip()
             self._week_notes[week_num] = {
-                'description': desc,
-                'image_path':  chosen_path[0],
+                'description' : desc,
+                'image_path'  : chosen_paths,
+                'category'    : self.event_type_dropdown.get(),
             }
             self._photo_cache.pop(week_num, None)
 
