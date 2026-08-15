@@ -7,188 +7,18 @@ from datetime import date, datetime, timedelta
 
 from PIL import Image, ImageTk, ImageOps
 
-# ── Grid constants ────────────────────────────────────────────────────────────
-ROWS          = 81          # max years rendered
-COLS          = 52          # weeks per year
-BOX           = 15          # box size in pixels
-GAP           = 4           # gap between boxes
-CELL          = BOX + GAP   # 20 px per cell
-YEAR_W        = 30          # left column reserved for year labels
-CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W + YEAR_W
+# Custom Widgets
+import widgets
 
-# ── Colour palette ────────────────────────────────────────────────────────────
-BG            = '#121212'
-PAST_COLOR    = '#8e8e93'
-NOW_COLOR     = '#ffffff'
-FUTURE_COLOR  = '#3a3a3c'
-TEXT_FG       = '#f2f2f7'
-
-# Label Colours
-RED           = "#d91d2a"
-ORANGE        = "#ff6410"
-APRICOT       = "#fc7450"
-PEACH         = "#e57e5e"
-POLLEN        = "#FFD25B"
-FLASH_LIGHT   = "#f7ec00"
-FLASH         = "#e1f322"
-GREEN         = "#8DE328"
-MINT          = "#aeec9d"
-TURQUOISE     = "#9ed5cc"
-LIGHT_BLUE    = "#6ac5dd"
-BLUE          = "#1ab5fc"
-ROYAL_BLUE    = "#63aeee"
-LILAC         = "#c1d8fd"
-MIST_BLUE     = "#b3b8a7"
-AZURE         = "#879aa1"
-BLUE_COBALT   = "#477e9d"
-DARK_TEAL     = "#357393"
-DENIM_BLUE    = "#5b83a8"
-MIDNIGHT_BLUE = "#6084bf"
-OCEAN_BLUE    = "#7388c7"
-PURPLE        = "#997cf7"
-ULTRA_VIOLET  = "#7157be"
-LAVENDAR      = "#b29aa6"
-PINK_SAND     = "#ffc2a9"
-LIGHT_PINK    = "#f4b0aa"
-PINK          = "#ff5964"
-ELECTRIC_PINK = "#ff4e51"
-ROSE_RED      = "#b92946"
-CAMELLIA      = "#c94544"
-FLAMINGO      = "#d3836A"
-WALNUT        = "#b08664"
-STONE         = "#af9980"
-PEBBLE        = "#ad9d8e"
-DARK_OLIVE    = "#8c8c76"
-
-PALETTE = [
-    RED, ORANGE, APRICOT, PEACH, POLLEN, FLASH_LIGHT, FLASH, GREEN, MINT,
-    TURQUOISE, LIGHT_BLUE, BLUE, ROYAL_BLUE, LILAC, MIST_BLUE, AZURE,
-    BLUE_COBALT, DARK_TEAL, DENIM_BLUE, MIDNIGHT_BLUE, OCEAN_BLUE, PURPLE,
-    ULTRA_VIOLET, LAVENDAR, PINK_SAND, LIGHT_PINK, PINK, ELECTRIC_PINK,
-    ROSE_RED, CAMELLIA, FLAMINGO, WALNUT, STONE, PEBBLE, DARK_OLIVE,
-]
-
-DEFAULT_LABEL_COLOURS = [
-    (PAST_COLOR,  'Past'),
-    (NOW_COLOR,   'Current'),
-    (FUTURE_COLOR,'Future'),
-]
-
-# ── Event Types ────────────────────────────────────────────────────────────────
-event_types = [
-    "Select Category",
-    "Activities",
-    "Travel",
-    "Education",
-    "Career",
-    "Relationships",
-    "Health",
-    "Family",
-    "Other"]
-
-event_type_colours = {
-    "Select Category": BG,
-    "Activities"     : ORANGE,
-    "Travel"         : PURPLE,
-    "Education"      : BLUE,
-    "Career"         : GREEN,
-    "Relationships"  : PINK,
-    "Health"         : POLLEN,
-    "Family"         : LILAC,
-    "Other"          : STONE
-}
-
-
-# ── Font sizes ────────────────────────────────────────────────────────────────
-H1    = ('Futura Cyrillic Bold',   50)
-H2    = ('Futura Cyrillic Medium', 36)
-H3    = ('Futura Cyrillic Medium', 20)
-BODY  = ('Futura Cyrillic Book',   12)
-LABEL = ('Futura Cyrillic Book',  10)
-
-
-# ── Week Cell Widget ────────────────────────────────────────────────────────────
-
-class Week_Cell:
-    def __init__(
-            self,
-            id          :int,
-            year        :int,
-            week        :int,
-            label       :str,
-            colour      :str,
-            rectangle,
-            image_paths = None,
-            description = "",
-            category    = "Select Category"):
-        
-        self.id = id
-        self.year        = year
-        self.week        = week
-        self.label       = label
-        self.colour      = colour
-        self.cell        = rectangle
-        
-        # Optional metadata which is added by the user.
-        self.image_paths = image_paths if image_paths is not None else []
-        self.description = description
-        self.category    = category
-        
-        # Getter for week_number
-        @property
-        def id(self):
-            return self._week_number
-        
-        @id.setter
-        def id(self, number :int):
-            self._week_number = number
-
-        @property
-        def year(self):
-            return self._year
-        
-        @year.setter
-        def year(self, year_value :int):
-            self._year = year_value
-
-        @property
-        def week(self):
-            return self._week
-        
-        @week.setter
-        def week(self, week_value :int):
-            self._week = week_value
-
-        @property
-        def label(self):
-            return self._label
-        
-        @label.setter
-        def label(self, label_type :str):
-            self._label = label_type
-        
-        @property
-        def colour(self):
-            return self._colour
-        
-        @colour.setter
-        def colour(self, colour_value :str):
-            self._colour = colour_value
-
-        @property
-        def rectangle(self):
-            return self._rectangle
-        
-        @rectangle.setter
-        def rectangle(self, canvas_rect):
-            self._rectangle = canvas_rect
+# Style Constants
+import styles
 
 
 class App:
     def __init__(self, root: tk.Tk):
         self.root = root
         self.root.title("4000 Weeks")
-        self.root.configure(bg=BG)
+        self.root.configure(bg=styles.BG)
         self._center(960, 540)
         self.root.state("zoomed")
 
@@ -197,7 +27,7 @@ class App:
         self._week_labels   : dict[int, int]                = {}   # week_num → label index
         self._week_notes    : dict[int, dict]               = {}   # week_num → {description, image_paths, category}
         self._photo_cache   : dict[int, list[ImageTk.PhotoImage]] = {}   # keeps refs alive (list per week, up to 4 thumbnails)
-        self.week_cells     : list[Week_Cell]               = []
+        self.week_cells     : list[widgets.Week_Cell]               = []
 
         self._weeks_lived   = 0
         self._total_weeks   = 0
@@ -259,14 +89,14 @@ class App:
 
         # Create the parent page to contain all of the subsections.
         self._page = tk.Canvas(self.root,
-                               bg                   =BG,
+                               bg                   =styles.BG,
                                highlightthickness   =0,
                                yscrollcommand       =scrollbar.set
                                )
         self._page.pack(side='left', fill='both', expand=True)
         scrollbar.config(command=self._page.yview)
 
-        self._content = tk.Frame(self._page, bg=BG)
+        self._content = tk.Frame(self._page, bg=styles.BG)
         self._win_id  = self._page.create_window(
             0,
             0,
@@ -312,12 +142,12 @@ class App:
         '''
 
         # Create a frame to keep the header section the same width as the grid section.
-        frame = tk.Frame(self._content, width=CANVAS_WIDTH, height=80, bg=BG)
+        frame = tk.Frame(self._content, width=styles.CANVAS_WIDTH, height=80, bg=styles.BG)
         frame.pack(pady=(100, 2))
         frame.pack_propagate(False)
 
         # The active birthday - default text is "Add birthday".
-        self.birthday = tk.Label(frame, text="Add birthday", bg=BG, fg=TEXT_FG, font=H1)
+        self.birthday = tk.Label(frame, text="Add birthday", bg=styles.BG, fg=styles.TEXT_FG, font=styles.H1)
         self.birthday.pack()
 
         # Bind clicking the birthday label to allow a new date to be visualised.
@@ -347,18 +177,18 @@ class App:
         btn = tk.Label(
             parent,
             image=photo_image,
-            bg=BG,
+            bg=styles.BG,
             cursor='hand2',
             pady=2)
         btn.image = photo_image  # Prevent garbage collection.
 
-        hover_bg = FUTURE_COLOR
+        hover_bg = styles.FUTURE_COLOR
 
         def _on_enter(event):
             event.widget.configure(bg=hover_bg)
 
         def _on_leave(event):
-            event.widget.configure(bg=BG)
+            event.widget.configure(bg=styles.BG)
 
         btn.bind("<Enter>", _on_enter)
         btn.bind("<Leave>", _on_leave)
@@ -380,17 +210,17 @@ class App:
         if getattr(self, '_dark_mode', True):
             # Switching TO light mode.
             colour_map = {
-                BG:           '#f2f2f7',
-                FUTURE_COLOR: '#d1d1d6',
-                TEXT_FG:      '#1c1c1e',
+                styles.BG:           '#f2f2f7',
+                styles.FUTURE_COLOR: '#d1d1d6',
+                styles.TEXT_FG:      '#1c1c1e',
             }
             self._dark_mode = False
         else:
             # Switching back TO dark mode.
             colour_map = {
-                '#f2f2f7': BG,
-                '#d1d1d6': FUTURE_COLOR,
-                '#1c1c1e': TEXT_FG,
+                '#f2f2f7': styles.BG,
+                '#d1d1d6': styles.FUTURE_COLOR,
+                '#1c1c1e': styles.TEXT_FG,
             }
             self._dark_mode = True
 
@@ -423,14 +253,14 @@ class App:
         '''
         # Container frame for the controls to maintain the grid width and left
         # align the buttons and right align the stats.
-        frame = tk.Frame(self._content, bg=BG, width=CANVAS_WIDTH, height=100)
+        frame = tk.Frame(self._content, bg=styles.BG, width=styles.CANVAS_WIDTH, height=100)
         frame.pack(pady=(6, 10))
 
         # Default birthday value.
         self.dob_var = tk.StringVar(value='1998-10-15')
 
         # Frame for the tools.
-        tool_frame = tk.Frame(frame, bg=BG, height=40, width=CANVAS_WIDTH)
+        tool_frame = tk.Frame(frame, bg=styles.BG, height=40, width=styles.CANVAS_WIDTH)
         tool_frame.pack(anchor='center', fill='x', expand=True)
         tool_frame.columnconfigure([0,4], weight=3)
 
@@ -456,7 +286,7 @@ class App:
         theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
         
         # Spacer
-        tk.Frame(frame, bg=BG, height=100).pack(anchor='center', fill='both', expand=True)
+        tk.Frame(frame, bg=styles.BG, height=100).pack(anchor='center', fill='both', expand=True)
 
         # Stats about the 4000 weeks visualisation. 
         self._stat_vars: dict[str, tk.StringVar] = {}
@@ -464,16 +294,16 @@ class App:
         # The lifespace that is used to generate the grid.
         self.life_var = tk.StringVar(value='80')
 
-        stats_frame = tk.Frame(frame, bg=BG)
+        stats_frame = tk.Frame(frame, bg=styles.BG)
         stats_frame.pack(fill="both", expand=True)
 
         for i, key in enumerate(('Weeks Lived', 'Years Remaining', 'Life Complete')):
             tk.Label(
                 stats_frame,
                 text=key,
-                bg=BG,
-                fg=TEXT_FG,
-                font=LABEL
+                bg=styles.BG,
+                fg=styles.TEXT_FG,
+                font=styles.LABEL
                 ).grid(row=0, column=i, padx=40)
             
             v = tk.StringVar(value='—')
@@ -483,47 +313,47 @@ class App:
             tk.Label(
                 stats_frame,
                 textvariable=v,
-                bg=BG,
-                fg=TEXT_FG,
-                font=H2
+                bg=styles.BG,
+                fg=styles.TEXT_FG,
+                font=styles.H2
                 ).grid(row=1, column=i, padx=40)
 
         # Spacer
-        tk.Frame(frame, bg=BG, height=100).pack(anchor='center', fill='both', expand=True)
+        tk.Frame(frame, bg=styles.BG, height=100).pack(anchor='center', fill='both', expand=True)
 
     def _build_grid(self):
-        outer = tk.Frame(self._content, bg=BG)
+        outer = tk.Frame(self._content, bg=styles.BG)
         outer.pack(pady=(0, 20))
 
         self.canvas = tk.Canvas(
             outer,
-            bg=BG,
+            bg=styles.BG,
             highlightthickness=0,
-            width=CANVAS_WIDTH,
-            height=ROWS * CELL + GAP
+            width=styles.CANVAS_WIDTH,
+            height=styles.ROWS * styles.CELL + styles.GAP
             )
         self.canvas.pack()
 
         self._boxes: list[list[int]] = []
         self.years_labels: list[int] = []
 
-        for year in range(ROWS):
-            y_top = GAP + year * CELL
+        for year in range(styles.ROWS):
+            y_top = styles.GAP + year * styles.CELL
 
             # Create the row of week boxes.
             row: list[int] = []
-            for week in range(COLS):
-                x1 = YEAR_W + GAP + week * CELL
+            for week in range(styles.COLS):
+                x1 = styles.YEAR_W + styles.GAP + week * styles.CELL
                 rect = self.canvas.create_rectangle(
                     x1,
                     y_top,
-                    x1 + BOX,
-                    y_top + BOX,
-                    fill=FUTURE_COLOR,
+                    x1 + styles.BOX,
+                    y_top + styles.BOX,
+                    fill= styles.FUTURE_COLOR,
                     outline=''
                 )
-                week_num = year * COLS + week
-                cell = Week_Cell(week_num, year, week, "past", FUTURE_COLOR, rect)
+                week_num = year * styles.COLS + week
+                cell = widgets.Week_Cell(week_num, year, week, "past", styles.FUTURE_COLOR, rect)
                 self.week_cells.append(cell)
                     
                 row.append(rect)
@@ -535,14 +365,14 @@ class App:
         self.canvas.bind('<Button-1>',        self._open_week_popup)
 
     def _build_footer(self):
-        f = tk.Frame(self._content, bg=BG)
+        f = tk.Frame(self._content, bg=styles.BG)
         f.pack(pady=(22, 50))
         tk.Label(
             f,
             text="Designed & Developed by Kelton Boyter-Grant",
-            bg=BG,
-            fg=TEXT_FG,
-            font=LABEL).pack()
+            bg=styles.BG,
+            fg=styles.TEXT_FG,
+            font=styles.LABEL).pack()
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
@@ -555,7 +385,7 @@ class App:
 
         today       = date.today()
         weeks_lived = max(0, (today - dob).days // 7)
-        total_weeks = life_yrs * COLS
+        total_weeks = life_yrs * styles.COLS
         remaining   = max(0, total_weeks - weeks_lived)
         years_left  = round(remaining / 52, 1)
         pct         = min(100.0, round(weeks_lived / total_weeks * 100, 1))
@@ -570,7 +400,7 @@ class App:
 
         for year, row_boxes in enumerate(self._boxes):
             for week, rect in enumerate(row_boxes):
-                n = year * COLS + week
+                n = year * styles.COLS + week
                 color = self._colour_for_week(n, weeks_lived)
                 self.canvas.itemconfig(rect, fill=color)
 
@@ -606,18 +436,18 @@ class App:
         note = self._week_notes.get(week_num)
         if note:
             category = note.get('category')
-            if category and category in event_type_colours and category != "Select Category":
-                return event_type_colours[category]
+            if category and category in styles.event_type_colours and category != "Select Category":
+                return styles.event_type_colours[category]
 
         if weeks_lived is None:
             weeks_lived = self._weeks_lived
 
         if week_num < weeks_lived - 1:
-            return PAST_COLOR
+            return styles.PAST_COLOR
         elif week_num == weeks_lived - 1:
-            return NOW_COLOR
+            return styles.NOW_COLOR
         else:
-            return FUTURE_COLOR
+            return styles.FUTURE_COLOR
 
     def _apply_week_colour(self, week_num: int):
         '''
@@ -629,8 +459,8 @@ class App:
         @param week_num : The week index (year * COLS + week).
         @return          : N/A
         '''
-        row, col = divmod(week_num, COLS)
-        if not (0 <= row < len(self._boxes) and 0 <= col < COLS):
+        row, col = divmod(week_num, styles.COLS)
+        if not (0 <= row < len(self._boxes) and 0 <= col < styles.COLS):
             return
 
         colour = self._colour_for_week(week_num)
@@ -657,15 +487,15 @@ class App:
             self._click_pending = None
 
         cx, cy = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
-        gx, gy = cx - YEAR_W - GAP, cy - GAP
+        gx, gy = cx - styles.YEAR_W - styles.GAP, cy - styles.GAP
         if gx < 0 or gy < 0:
             return
 
-        col, row = int(gx // CELL), int(gy // CELL)
-        if not (0 <= col < COLS and 0 <= row < ROWS):
+        col, row = int(gx // styles.CELL), int(gy // styles.CELL)
+        if not (0 <= col < styles.COLS and 0 <= row < styles.ROWS):
             return
 
-        week_num = row * COLS + col
+        week_num = row * styles.COLS + col
         if week_num >= self._weeks_lived - 1:
             return
 
@@ -675,19 +505,19 @@ class App:
     def _on_hover(self, event: tk.Event):
         cx = self.canvas.canvasx(event.x)
         cy = self.canvas.canvasy(event.y)
-        gx = cx - YEAR_W - GAP
-        gy = cy - GAP
+        gx = cx - styles.YEAR_W - styles.GAP
+        gy = cy - styles.GAP
         if gx < 0 or gy < 0:
             self._hide_tooltip()
             return
 
-        col = int(gx // CELL)
-        row = int(gy // CELL)
-        if not (0 <= col < COLS and 0 <= row < ROWS):
+        col = int(gx // styles.CELL)
+        row = int(gy // styles.CELL)
+        if not (0 <= col < styles.COLS and 0 <= row < styles.ROWS):
             self._hide_tooltip()
             return
 
-        week_num = row * COLS + col
+        week_num = row * styles.COLS + col
         screen_x = self.canvas.winfo_rootx() + event.x
         screen_y = self.canvas.winfo_rooty() + event.y
 
@@ -706,7 +536,7 @@ class App:
     def _show_tooltip(self, week_num: int, screen_x: int, screen_y: int):
         self._hide_tooltip()
 
-        row, col = divmod(week_num, COLS)
+        row, col = divmod(week_num, styles.COLS)
         try:
             week_start = self._dob + timedelta(weeks=week_num)
             header = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
@@ -722,45 +552,50 @@ class App:
 
         win = tk.Toplevel(self.root)
         win.overrideredirect(True)
-        win.configure(bg=BG)
+        win.configure(bg=styles.BG)
         win.attributes('-topmost', True)
 
         pad = 10
 
-        tk.Label(win, text=header, bg=BG, fg=TEXT_FG,
-                 font=BODY).pack(anchor='w', padx=pad, pady=(pad, 2))
+        tk.Label(
+            win,
+            text=header,
+            bg=styles.BG,
+            fg=styles.TEXT_FG,
+            font=styles.BODY
+            ).pack(anchor='w', padx=pad, pady=(pad, 2))
 
         # Legend label swatch (if this week belongs to a custom label).
         if label_entry:
-            lf = tk.Frame(win, bg=BG)
+            lf = tk.Frame(win, bg=styles.BG)
             lf.pack(anchor='w', padx=pad, pady=(0, 4))
-            dot = tk.Canvas(lf, width=10, height=10, bg=BG, highlightthickness=0)
+            dot = tk.Canvas(lf, width=10, height=10, bg=styles.BG, highlightthickness=0)
             dot.create_rectangle(0, 0, 10, 10, fill=label_entry['color'], outline='')
             dot.pack(side='left', padx=(0, 5))
-            tk.Label(lf, text=label_entry['name'], bg=BG, fg=TEXT_FG,
-                     font=BODY).pack(side='left')
+            tk.Label(lf, text=label_entry['name'], bg=styles.BG, fg=styles.TEXT_FG,
+                     font=styles.BODY).pack(side='left')
 
         # Event category swatch (colour picked from the event type combobox).
         if has_category:
-            cf = tk.Frame(win, bg=BG)
+            cf = tk.Frame(win, bg=styles.BG)
             cf.pack(anchor='w', padx=pad, pady=(0, 4))
-            dot = tk.Canvas(cf, width=10, height=10, bg=BG, highlightthickness=0)
+            dot = tk.Canvas(cf, width=10, height=10, bg=styles.BG, highlightthickness=0)
             dot.create_rectangle(0, 0, 10, 10,
-                                  fill=event_type_colours.get(category, PAST_COLOR),
+                                  fill=styles.event_type_colours.get(category, styles.PAST_COLOR),
                                   outline='')
             dot.pack(side='left', padx=(0, 5))
-            tk.Label(cf, text=category, bg=BG, fg=TEXT_FG,
-                     font=BODY).pack(side='left')
+            tk.Label(cf, text=category, bg=styles.BG, fg=styles.TEXT_FG,
+                     font=styles.BODY).pack(side='left')
 
         if has_note:
-            body = tk.Frame(win, bg=BG)
+            body = tk.Frame(win, bg=styles.BG)
             body.pack(fill='x', padx=pad, pady=(4, pad))
 
             # Render every saved image (up to 4) as small thumbnails in a row.
             img_paths = [p for p in (note.get('image_paths') or [])
                          if p and os.path.isfile(p)]
             if img_paths:
-                images_frame = tk.Frame(body, bg=BG)
+                images_frame = tk.Frame(body, bg=styles.BG)
                 images_frame.pack(side='left', padx=(0, 10), anchor='n')
 
                 if week_num not in self._photo_cache:
@@ -778,17 +613,23 @@ class App:
                 # Lay thumbnails out 2-per-row so the tooltip doesn't get too wide.
                 for i, photo in enumerate(thumbs):
                     r, c = divmod(i, 2)
-                    lbl = tk.Label(images_frame, image=photo, bg=BG)
+                    lbl = tk.Label(images_frame, image=photo, bg=styles.BG)
                     lbl.image = photo
                     lbl.grid(row=r, column=c, padx=2, pady=2)
 
             desc = note.get('description', '').strip()
             if desc:
-                tk.Label(body, text=desc, bg=BG, fg=TEXT_FG,
-                         font=BODY, wraplength=180,
-                         justify='left').pack(side='left', anchor='n')
+                tk.Label(
+                    body,
+                    text=desc,
+                    bg=styles.BG,
+                    fg=styles.TEXT_FG,
+                    font=styles.BODY,
+                    wraplength=180,
+                    justify='left'
+                    ).pack(side='left', anchor='n')
         else:
-            tk.Frame(win, bg=BG, height=pad).pack()
+            tk.Frame(win, bg=styles.BG, height=pad).pack()
 
         win.update_idletasks()
         win.geometry(f'+{screen_x + 14}+{screen_y + 14}')
@@ -814,7 +655,7 @@ class App:
 
     def update_popup_background(self, event=None):
             event_type = self.event_type_dropdown.get()
-            new_background_colour = event_type_colours[event_type]
+            new_background_colour = styles.event_type_colours[event_type]
     
             # Set the popup background
             self.week_note_popup.config(bg=new_background_colour)
@@ -834,7 +675,7 @@ class App:
         # Store a list of widgets that need their backgrounds to update with the event type
         self.popup_widgets = []
 
-        row, col = divmod(week_num, COLS)
+        row, col = divmod(week_num, styles.COLS)
         try:
             week_start = self._dob + timedelta(weeks=week_num)
             title_text = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
@@ -843,7 +684,7 @@ class App:
 
         self.week_note_popup = tk.Toplevel(self.root)
         self.week_note_popup.title('Week Note')
-        self.week_note_popup.configure(bg=BG, padx=20, pady=20)
+        self.week_note_popup.configure(bg=styles.BG, padx=20, pady=20)
         self.week_note_popup.resizable(False, False)
         self.week_note_popup.grab_set()
 
@@ -854,9 +695,9 @@ class App:
         date_title = tk.Label(
             self.week_note_popup,
             text=title_text,
-            bg=BG,
-            fg=TEXT_FG,
-            font=H3
+            bg=styles.BG,
+            fg=styles.TEXT_FG,
+            font=styles.H3
             )
         date_title.pack(anchor='w', pady=(0, 10))
 
@@ -865,9 +706,9 @@ class App:
         # ── Event Type row ─────────────────────────────────────────────    
         self.event_type_dropdown = ttk.Combobox(
             self.week_note_popup,
-            values= event_types,
+            values= styles.event_types,
             state="readonly",
-            font=BODY
+            font=styles.BODY
         )
         self.event_type_dropdown.set("Select Category")
         self.event_type_dropdown.pack(fill="x", anchor="n", pady=10)
@@ -877,7 +718,7 @@ class App:
             self.event_type_dropdown.set(existing['category'])
 
         # ── Image row ─────────────────────────────────────────────
-        img_row = tk.Frame(self.week_note_popup, bg=BG)
+        img_row = tk.Frame(self.week_note_popup, bg=styles.BG)
         img_row.pack(fill='x', pady=10, anchor="n")
 
         self.popup_widgets.append(img_row)
@@ -890,7 +731,7 @@ class App:
         # Create the 4 Canvas Preview widgets
         preview = tk.Canvas(
             img_row,
-            bg=FUTURE_COLOR,
+            bg=styles.FUTURE_COLOR,
             width=1,
             height=row_height * 2,
             highlightthickness=0
@@ -899,7 +740,7 @@ class App:
 
         preview_1 = tk.Canvas(
             img_row,
-            bg=FUTURE_COLOR,
+            bg=styles.FUTURE_COLOR,
             width=1,
             height=row_height * 2,
             highlightthickness=0
@@ -908,7 +749,7 @@ class App:
 
         preview_2 = tk.Canvas(
             img_row,
-            bg=FUTURE_COLOR,
+            bg=styles.FUTURE_COLOR,
             width=1,
             height=row_height,
             highlightthickness=0
@@ -917,7 +758,7 @@ class App:
 
         preview_3 = tk.Canvas(
             img_row,
-            bg=FUTURE_COLOR,
+            bg=styles.FUTURE_COLOR,
             width=1,
             height=row_height,
             highlightthickness=0
@@ -1009,11 +850,11 @@ class App:
             img_row,
             text='Add images',
             command=_pick_image,
-            bg=FUTURE_COLOR,
-            fg=TEXT_FG,
+            bg=styles.FUTURE_COLOR,
+            fg=styles.TEXT_FG,
             relief='flat',
             cursor='hand2',
-            font=BODY
+            font=styles.BODY
         )
         add_images_button.grid(row=2, column=0, columnspan=3, sticky="nsew", pady=10)
 
@@ -1021,9 +862,9 @@ class App:
         description_label = tk.Label(
             self.week_note_popup,
             text='Description',
-            bg=BG,
-            fg=TEXT_FG,
-            font=LABEL
+            bg=styles.BG,
+            fg=styles.TEXT_FG,
+            font=styles.LABEL
             )
         description_label.pack(anchor='w', pady=(10,5))
 
@@ -1032,11 +873,11 @@ class App:
         description_box = tk.Text(
             self.week_note_popup,
             height=5,
-            bg=FUTURE_COLOR,
-            fg=TEXT_FG,
-            insertbackground=TEXT_FG,
+            bg=styles.FUTURE_COLOR,
+            fg=styles.TEXT_FG,
+            insertbackground=styles.TEXT_FG,
             relief='flat',
-            font=LABEL,
+            font=styles.LABEL,
             wrap='word'
             )
         description_box.pack(fill='x', pady=(0,10))
@@ -1045,7 +886,7 @@ class App:
             description_box.insert('1.0', existing['description'])
 
         # ── Buttons ───────────────────────────────────────────────
-        btn_row = tk.Frame(self.week_note_popup, bg=BG)
+        btn_row = tk.Frame(self.week_note_popup, bg=styles.BG)
         btn_row.pack(fill='x', expand=True, anchor="s")
         btn_row.columnconfigure((0,1,2), weight=1)
 
@@ -1092,23 +933,24 @@ class App:
             btn_row,
             text='Cancel',
             command=self.week_note_popup.destroy,
-            bg=FUTURE_COLOR,
-            fg=TEXT_FG,
+            bg=styles.FUTURE_COLOR,
+            fg=styles.TEXT_FG,
             relief='flat',
             cursor='hand2',
-            font=LABEL,
-            padx=14)
+            font=styles.LABEL,
+            padx=14
+            )
         cancel_popup_button.grid(row=0, column=0, sticky='nsew')
 
         clear_popup_button = tk.Button(
             btn_row,
             text='Clear',
             command=_clear,
-            bg=FUTURE_COLOR,
-            fg=TEXT_FG,
+            bg=styles.FUTURE_COLOR,
+            fg=styles.TEXT_FG,
             relief='flat',
             cursor='hand2',
-            font=LABEL,
+            font=styles.LABEL,
             padx=14)
         clear_popup_button.grid(row=0, column=1, sticky='nsew', padx=10)
 
@@ -1116,11 +958,11 @@ class App:
             btn_row,
             text='Save',
             command=_save,
-            bg="#ffffff",
+            bg="#ffffff", #TODO: replace colours
             fg="#262626",
             relief='flat',
             cursor='hand2',
-            font=LABEL,
+            font=styles.LABEL,
             padx=14)
         save_popup_button.grid(row=0, column=2, sticky='nsew')
 
@@ -1156,7 +998,7 @@ class App:
         popup = tk.Toplevel(main_window)
         popup.title(title)
         popup.resizable(False, False)
-        popup.config(padx=15, pady=15)
+        popup.config(padx=15, pady=15, bg=styles.BG)
 
         # Launch the popup in the centre of the root window.
         self.centre_launch_popup(main_window, popup, width, height)
@@ -1173,14 +1015,14 @@ class App:
         When the user clicks on the birthday label, open a popup where the
         user can type a new birthday date to visualise.
         '''
-        popup = self.create_popup(self.root, "Update Birthday", 350, 110)
+        popup = self.create_popup(self.root, "Update Birthday", 450, 200)
 
         # Create a label for what the user has to input.
-        lbl_name = tk.Label(popup, text="Birthday DD-MM-YYYY:", font=LABEL)
+        lbl_name = tk.Label(popup, text="Birthday DD-MM-YYYY:", font=styles.BODY, fg=styles.TEXT_FG, bg=styles.BG)
         lbl_name.grid(row=0, column=0, sticky="w", pady=(0,20))
 
         # Create an entry widget 
-        ent_name = tk.Entry(popup, font=BODY)
+        ent_name = tk.Entry(popup, font=styles.BODY, bg=styles.FUTURE_COLOR, fg=styles.TEXT_FG)
         ent_name.grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=(0,20))
         ent_name.focus_set()
 
@@ -1223,15 +1065,18 @@ class App:
         def close_popup(event=None):
             popup.destroy()
 
-        # Create confirm and quit buttons
-        btn_frame = tk.Frame(popup)
-        btn_frame.grid(row=1, column=0, columnspan=2, sticky="ew")
+        # CONFIRM AND CLOSE BUTTON
+        btn_frame = tk.Frame(popup, bg=BG)
+        btn_frame.grid(row=1, column=0, columnspan=2, sticky="sew", pady=(20,0))
         btn_frame.columnconfigure(0, weight=1)
 
         btn_close = tk.Button(
             btn_frame,
             text                = "Cancel",
-            font                = ("futura-book", 12),
+            font                = BODY,
+            bg                  = FUTURE_COLOR,
+            fg                  = TEXT_FG,
+            relief              = 'flat',
             command             = popup.destroy
             )
         btn_close.grid(row=0, column=1, padx=(0,5))
@@ -1239,7 +1084,10 @@ class App:
         btn_create = tk.Button(
             btn_frame,
             text                = "Update",
-            font                = ("futura-book", 12),
+            font                = BODY,
+            bg                  = FUTURE_COLOR,
+            fg                  = TEXT_FG,
+            relief              = 'flat',
             command             = update_name
             )
         btn_create.grid(row=0, column=2, padx=(5,0))
