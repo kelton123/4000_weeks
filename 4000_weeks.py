@@ -23,11 +23,11 @@ class App:
         self.root.state("zoomed")
 
         # ── Runtime state ─────────────────────────────────────────
-        self._custom_labels : list[dict]                    = []   # [{name, color}, …]
-        self._week_labels   : dict[int, int]                = {}   # week_num → label index
-        self._week_notes    : dict[int, dict]               = {}   # week_num → {description, image_paths, category}
+        self._custom_labels : list[dict]                          = []   # [{name, color}, …]
+        self._week_labels   : dict[int, int]                      = {}   # week_num → label index
+        self._week_notes    : dict[int, dict]                     = {}   # week_num → {description, image_paths, category}
         self._photo_cache   : dict[int, list[ImageTk.PhotoImage]] = {}   # keeps refs alive (list per week, up to 4 thumbnails)
-        self.week_cells     : list[widgets.Week_Cell]               = []
+        self.week_cells     : list[widgets.Week_Cell]             = []
 
         self._weeks_lived   = 0
         self._total_weeks   = 0
@@ -846,16 +846,7 @@ class App:
         # Initial load of existing images
         _load_previews()
 
-        add_images_button = tk.Button(
-            img_row,
-            text='Add images',
-            command=_pick_image,
-            bg=styles.FUTURE_COLOR,
-            fg=styles.TEXT_FG,
-            relief='flat',
-            cursor='hand2',
-            font=styles.BODY
-        )
+        add_images_button = widgets.ButtonText(img_row, text="Add images", command=_pick_image)
         add_images_button.grid(row=2, column=0, columnspan=3, sticky="nsew", pady=10)
 
         # ── Description ───────────────────────────────────────────
@@ -929,41 +920,13 @@ class App:
             # Repaint the square back to its default colour immediately.
             self._apply_week_colour(week_num)
 
-        cancel_popup_button = tk.Button(
-            btn_row,
-            text='Cancel',
-            command=self.week_note_popup.destroy,
-            bg=styles.FUTURE_COLOR,
-            fg=styles.TEXT_FG,
-            relief='flat',
-            cursor='hand2',
-            font=styles.LABEL,
-            padx=14
-            )
+        cancel_popup_button = widgets.ButtonText(btn_row, text="Cancel", command=self.week_note_popup.destroy)
         cancel_popup_button.grid(row=0, column=0, sticky='nsew')
 
-        clear_popup_button = tk.Button(
-            btn_row,
-            text='Clear',
-            command=_clear,
-            bg=styles.FUTURE_COLOR,
-            fg=styles.TEXT_FG,
-            relief='flat',
-            cursor='hand2',
-            font=styles.LABEL,
-            padx=14)
+        clear_popup_button = widgets.ButtonText(btn_row, text="Clear", command=_clear) 
         clear_popup_button.grid(row=0, column=1, sticky='nsew', padx=10)
 
-        save_popup_button = tk.Button(
-            btn_row,
-            text='Save',
-            command=_save,
-            bg="#ffffff", #TODO: replace colours
-            fg="#262626",
-            relief='flat',
-            cursor='hand2',
-            font=styles.LABEL,
-            padx=14)
+        save_popup_button = widgets.ButtonTextActive(btn_row, text="Save", command=_save)
         save_popup_button.grid(row=0, column=2, sticky='nsew')
 
         # Now that every themed widget has been created and registered in
@@ -1066,30 +1029,14 @@ class App:
             popup.destroy()
 
         # CONFIRM AND CLOSE BUTTON
-        btn_frame = tk.Frame(popup, bg=BG)
+        btn_frame = tk.Frame(popup, bg=styles.BG)
         btn_frame.grid(row=1, column=0, columnspan=2, sticky="sew", pady=(20,0))
         btn_frame.columnconfigure(0, weight=1)
 
-        btn_close = tk.Button(
-            btn_frame,
-            text                = "Cancel",
-            font                = BODY,
-            bg                  = FUTURE_COLOR,
-            fg                  = TEXT_FG,
-            relief              = 'flat',
-            command             = popup.destroy
-            )
+        btn_close = widgets.ButtonText(btn_frame, text="Cancel", command=popup.destroy)
         btn_close.grid(row=0, column=1, padx=(0,5))
 
-        btn_create = tk.Button(
-            btn_frame,
-            text                = "Update",
-            font                = BODY,
-            bg                  = FUTURE_COLOR,
-            fg                  = TEXT_FG,
-            relief              = 'flat',
-            command             = update_name
-            )
+        btn_create = widgets.ButtonTextActive(btn_frame, text="Update", command=update_name)
         btn_create.grid(row=0, column=2, padx=(5,0))
 
         # Bind keyboard inputs

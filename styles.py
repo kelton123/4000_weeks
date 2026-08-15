@@ -95,8 +95,9 @@ event_type_colours = {
 
 
 # ── Font sizes ────────────────────────────────────────────────────────────────
-H1    = ('Futura Cyrillic Bold',   50)
-H2    = ('Futura Cyrillic Medium', 36)
-H3    = ('Futura Cyrillic Medium', 20)
-BODY  = ('Futura Cyrillic Book',   12)
-LABEL = ('Futura Cyrillic Book',  10)
+H1        = ('Futura Cyrillic Bold',   50)
+H2        = ('Futura Cyrillic Medium', 36)
+H3        = ('Futura Cyrillic Medium', 20)
+BODY      = ('Futura Cyrillic Book',   12)
+BODY_BOLD = ('Futura Cyrillic Bold', 12)
+LABEL     = ('Futura Cyrillic Book',  10)

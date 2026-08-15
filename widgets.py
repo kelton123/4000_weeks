@@ -1,13 +1,28 @@
 import tkinter as tk
 import styles
 
-class Button(tk.Button):
+class ButtonText(tk.Button):
     def __init__(self, parent, **kwargs):
         defaults = {
             "font"   : styles.BODY,
             "bg"     : styles.FUTURE_COLOR,
             "fg"     : styles.TEXT_FG,
             "relief" : 'flat',
+            "cursor" :'hand2',
+            "padx"   : 14
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+class ButtonTextActive(tk.Button):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font"   : styles.BODY_BOLD,
+            "bg"     : styles.NOW_COLOR,
+            "fg"     : styles.BG,
+            "relief" : 'flat',
+            "cursor" :'hand2',
+            "padx"   : 14
         }
         defaults.update(kwargs)
         super().__init__(parent, **defaults)
