@@ -1,6 +1,5 @@
 import json
 import os
-import random
 import shutil
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
@@ -99,13 +98,13 @@ event_type_colours = {
     "Other"          : STONE
 }
 
-# ── Font sizes ────────────────────────────────────────────────────────────────
-H1    = ('Futura-PT', 50, 'bold')
-H2    = 36 #('Futura-PT', 38, 'medium')
-H3    = 20 # ('Futura-PT', 28, 'medium')
-BODY  = 12 #('Futura-PT', 18, 'book')
-LABEL = 10 #('Futura-PT', 14, 'book')
 
+# ── Font sizes ────────────────────────────────────────────────────────────────
+H1    = ('Futura Cyrillic Bold',   50)
+H2    = ('Futura Cyrillic Medium', 36)
+H3    = ('Futura Cyrillic Medium', 20)
+BODY  = ('Futura Cyrillic Book',   12)
+LABEL = ('Futura Cyrillic Book',  10)
 
 
 # ── Week Cell Widget ────────────────────────────────────────────────────────────
@@ -474,7 +473,7 @@ class App:
                 text=key,
                 bg=BG,
                 fg=TEXT_FG,
-                font=('Futura-PT', LABEL)
+                font=LABEL
                 ).grid(row=0, column=i, padx=40)
             
             v = tk.StringVar(value='—')
@@ -486,7 +485,7 @@ class App:
                 textvariable=v,
                 bg=BG,
                 fg=TEXT_FG,
-                font=('Futura-PT', H2, 'bold')
+                font=H2
                 ).grid(row=1, column=i, padx=40)
 
         # Spacer
@@ -538,8 +537,12 @@ class App:
     def _build_footer(self):
         f = tk.Frame(self._content, bg=BG)
         f.pack(pady=(22, 50))
-        tk.Label(f, text="Designed & Developed by Kelton Boyter-Grant",
-                 bg=BG, fg=TEXT_FG, font=('Arial', LABEL)).pack()
+        tk.Label(
+            f,
+            text="Designed & Developed by Kelton Boyter-Grant",
+            bg=BG,
+            fg=TEXT_FG,
+            font=LABEL).pack()
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
@@ -725,7 +728,7 @@ class App:
         pad = 10
 
         tk.Label(win, text=header, bg=BG, fg=TEXT_FG,
-                 font=('Arial', BODY)).pack(anchor='w', padx=pad, pady=(pad, 2))
+                 font=BODY).pack(anchor='w', padx=pad, pady=(pad, 2))
 
         # Legend label swatch (if this week belongs to a custom label).
         if label_entry:
@@ -735,7 +738,7 @@ class App:
             dot.create_rectangle(0, 0, 10, 10, fill=label_entry['color'], outline='')
             dot.pack(side='left', padx=(0, 5))
             tk.Label(lf, text=label_entry['name'], bg=BG, fg=TEXT_FG,
-                     font=('Arial', BODY)).pack(side='left')
+                     font=BODY).pack(side='left')
 
         # Event category swatch (colour picked from the event type combobox).
         if has_category:
@@ -747,7 +750,7 @@ class App:
                                   outline='')
             dot.pack(side='left', padx=(0, 5))
             tk.Label(cf, text=category, bg=BG, fg=TEXT_FG,
-                     font=('Arial', BODY)).pack(side='left')
+                     font=BODY).pack(side='left')
 
         if has_note:
             body = tk.Frame(win, bg=BG)
@@ -782,7 +785,7 @@ class App:
             desc = note.get('description', '').strip()
             if desc:
                 tk.Label(body, text=desc, bg=BG, fg=TEXT_FG,
-                         font=('Arial', BODY), wraplength=180,
+                         font=BODY, wraplength=180,
                          justify='left').pack(side='left', anchor='n')
         else:
             tk.Frame(win, bg=BG, height=pad).pack()
@@ -853,7 +856,7 @@ class App:
             text=title_text,
             bg=BG,
             fg=TEXT_FG,
-            font=('Arial', H3)
+            font=H3
             )
         date_title.pack(anchor='w', pady=(0, 10))
 
@@ -864,7 +867,7 @@ class App:
             self.week_note_popup,
             values= event_types,
             state="readonly",
-            font=("Futura-PT", BODY)
+            font=BODY
         )
         self.event_type_dropdown.set("Select Category")
         self.event_type_dropdown.pack(fill="x", anchor="n", pady=10)
@@ -1010,7 +1013,7 @@ class App:
             fg=TEXT_FG,
             relief='flat',
             cursor='hand2',
-            font=('Arial', BODY)
+            font=BODY
         )
         add_images_button.grid(row=2, column=0, columnspan=3, sticky="nsew", pady=10)
 
@@ -1020,7 +1023,7 @@ class App:
             text='Description',
             bg=BG,
             fg=TEXT_FG,
-            font=('Futura-PT', LABEL)
+            font=LABEL
             )
         description_label.pack(anchor='w', pady=(10,5))
 
@@ -1033,7 +1036,7 @@ class App:
             fg=TEXT_FG,
             insertbackground=TEXT_FG,
             relief='flat',
-            font=('Arial', LABEL),
+            font=LABEL,
             wrap='word'
             )
         description_box.pack(fill='x', pady=(0,10))
@@ -1093,7 +1096,7 @@ class App:
             fg=TEXT_FG,
             relief='flat',
             cursor='hand2',
-            font=('Arial', LABEL),
+            font=LABEL,
             padx=14)
         cancel_popup_button.grid(row=0, column=0, sticky='nsew')
 
@@ -1105,7 +1108,7 @@ class App:
             fg=TEXT_FG,
             relief='flat',
             cursor='hand2',
-            font=('Arial', LABEL),
+            font=LABEL,
             padx=14)
         clear_popup_button.grid(row=0, column=1, sticky='nsew', padx=10)
 
@@ -1117,7 +1120,7 @@ class App:
             fg="#262626",
             relief='flat',
             cursor='hand2',
-            font=('Futura-PT', LABEL, 'bold'),
+            font=LABEL,
             padx=14)
         save_popup_button.grid(row=0, column=2, sticky='nsew')
 
@@ -1173,11 +1176,11 @@ class App:
         popup = self.create_popup(self.root, "Update Birthday", 350, 110)
 
         # Create a label for what the user has to input.
-        lbl_name = tk.Label(popup, text="Birthday DD-MM-YYYY:", font=("futura-book", 12))
+        lbl_name = tk.Label(popup, text="Birthday DD-MM-YYYY:", font=LABEL)
         lbl_name.grid(row=0, column=0, sticky="w", pady=(0,20))
 
         # Create an entry widget 
-        ent_name = tk.Entry(popup, font=("futura-book", 14))
+        ent_name = tk.Entry(popup, font=BODY)
         ent_name.grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=(0,20))
         ent_name.focus_set()
 
