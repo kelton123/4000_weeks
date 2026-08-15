@@ -143,6 +143,36 @@ class CaptionLabel(tk.Label):
         super().__init__(parent, **defaults)
 
 
+# ── ENTRY WIDGET ────────────────────────────────────────────────────────────────
+
+# Single line entry default
+class EntrySingleLineBody(tk.Entry):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font"   : styles.BODY,
+            "fg"     : styles.TEXT_FG,
+            "bg"     : styles.FUTURE_COLOR,
+            "relief" : "flat"
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+# Multi-line entry default
+class EntryMultilineBody(tk.Text):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "height"           : 5,
+            "bg"               : styles.FUTURE_COLOR,
+            "fg"               : styles.TEXT_FG,
+            "insertbackground" : styles.TEXT_FG,
+            "relief"           : "flat",
+            "font"             : styles.BODY,
+            "wrap"             : "word"
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
+
 # ── WEEK CELL WIDGET ────────────────────────────────────────────────────────────
 
 class Week_Cell:

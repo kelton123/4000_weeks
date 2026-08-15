@@ -788,16 +788,7 @@ class App:
 
         self.popup_widgets.append(description_label)
 
-        description_box = tk.Text(
-            self.week_note_popup,
-            height=5,
-            bg=styles.FUTURE_COLOR,
-            fg=styles.TEXT_FG,
-            insertbackground=styles.TEXT_FG,
-            relief='flat',
-            font=styles.LABEL,
-            wrap='word'
-            )
+        description_box = widgets.EntryMultilineBody(self.week_note_popup)
         description_box.pack(fill='x', pady=(0,10))
 
         if existing.get('description'):
@@ -912,7 +903,7 @@ class App:
         lbl_name.grid(row=0, column=0, sticky="w", pady=(0,20))
 
         # Create an entry widget 
-        ent_name = tk.Entry(popup, font=styles.BODY, bg=styles.FUTURE_COLOR, fg=styles.TEXT_FG)
+        ent_name = widgets.EntrySingleLineBody(popup)
         ent_name.grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=(0,20))
         ent_name.focus_set()
 
