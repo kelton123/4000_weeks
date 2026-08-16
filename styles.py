@@ -12,11 +12,29 @@ YEAR_W        = 30          # left column reserved for year labels
 CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W + YEAR_W
 
 # ── Colour palette ────────────────────────────────────────────────────────────
+
+# Dark Mode Theme
 BG            = '#121212'
 PAST_COLOR    = '#8e8e93'
 NOW_COLOR     = '#ffffff'
 FUTURE_COLOR  = '#3a3a3c'
 TEXT_FG       = '#f2f2f7'
+
+# "Surface" colour: the neutral background used by secondary/interactive
+SURFACE       = FUTURE_COLOR
+
+# Named aliases for the dark-mode values above, so the theme toggle can
+# always find its way back to "dark" regardless of what BG/TEXT_FG/SURFACE
+# currently hold.
+BG_DARK       = BG
+TEXT_FG_DARK  = TEXT_FG
+SURFACE_DARK  = SURFACE
+
+# Light Mode Theme
+BG_LIGHT      = "#f2f2f7"
+TEXT_FG_LIGHT = "#121212"
+SURFACE_LIGHT = "#e1e1e6"
+
 
 # Label Colours
 RED           = "#d91d2a"

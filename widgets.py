@@ -30,7 +30,7 @@ class ButtonText(tk.Button):
     def __init__(self, parent, **kwargs):
         defaults = {
             "font"   : styles.BODY,
-            "bg"     : styles.FUTURE_COLOR,
+            "bg"     : styles.SURFACE,
             "fg"     : styles.TEXT_FG,
             "relief" : 'flat',
             "cursor" :'hand2',
@@ -71,7 +71,7 @@ class ButtonImage(tk.Label):
 
     def on_enter(self, event):
         ''' Update the background colour to indicate hovering. '''
-        self.config(bg = styles.FUTURE_COLOR)
+        self.config(bg = styles.SURFACE)
         
     def on_leave(self, event):
         ''' Update the background colour to the default. '''
@@ -162,7 +162,7 @@ class EntrySingleLineBody(tk.Entry):
         defaults = {
             "font"   : styles.BODY,
             "fg"     : styles.TEXT_FG,
-            "bg"     : styles.FUTURE_COLOR,
+            "bg"     : styles.SURFACE,
             "relief" : "flat"
         }
         defaults.update(kwargs)
@@ -173,7 +173,7 @@ class EntryMultilineBody(tk.Text):
     def __init__(self, parent, **kwargs):
         defaults = {
             "height"           : 5,
-            "bg"               : styles.FUTURE_COLOR,
+            "bg"               : styles.SURFACE,
             "fg"               : styles.TEXT_FG,
             "insertbackground" : styles.TEXT_FG,
             "relief"           : "flat",

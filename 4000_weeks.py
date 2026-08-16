@@ -196,37 +196,34 @@ class App:
 
     def _toggle_theme(self):
         '''
-        First-pass light/dark mode toggle. Walks every widget under the root
-        window and swaps any background/foreground colour that matches the
-        "old" theme's colours for the equivalent colour in the "new" theme.
-        This is a generic approach so we don't have to individually track
-        every label/frame that gets created throughout the UI.
+        Toggles between the dark and light themes defined in styles.py.
 
         @param  : N/A
         @return : N/A
         @raise  : N/A
         '''
+        going_light = getattr(self, '_dark_mode', True)
+        self._dark_mode = not going_light
 
-        # TODO: implement a working version of the theme toggle
-        if getattr(self, '_dark_mode', True):
-            # Switching TO light mode.
+        if going_light:
             colour_map = {
-                styles.BG:           '#f2f2f7',
-                styles.FUTURE_COLOR: '#d1d1d6',
-                styles.TEXT_FG:      '#1c1c1e',
+                styles.BG_DARK:      styles.BG_LIGHT,
+                styles.TEXT_FG_DARK: styles.TEXT_FG_LIGHT,
+                styles.SURFACE_DARK: styles.SURFACE_LIGHT,
             }
-            self._dark_mode = False
+            styles.BG, styles.TEXT_FG, styles.SURFACE = (
+                styles.BG_LIGHT, styles.TEXT_FG_LIGHT, styles.SURFACE_LIGHT)
         else:
-            # Switching back TO dark mode.
             colour_map = {
-                '#f2f2f7': styles.BG,
-                '#d1d1d6': styles.FUTURE_COLOR,
-                '#1c1c1e': styles.TEXT_FG,
+                styles.BG_LIGHT:      styles.BG_DARK,
+                styles.TEXT_FG_LIGHT: styles.TEXT_FG_DARK,
+                styles.SURFACE_LIGHT: styles.SURFACE_DARK,
             }
-            self._dark_mode = True
+            styles.BG, styles.TEXT_FG, styles.SURFACE = (
+                styles.BG_DARK, styles.TEXT_FG_DARK, styles.SURFACE_DARK)
 
         def _walk(widget):
-            for option in ('bg', 'fg', 'background', 'foreground'):
+            for option in ('bg', 'fg'):
                 try:
                     current = widget.cget(option)
                 except tk.TclError:
@@ -240,7 +237,30 @@ class App:
             for child in widget.winfo_children():
                 _walk(child)
 
+        # Walking from self.root also reaches any currently-open Toplevel
+        # windows (note popup, birthday popup, tooltips) since Toplevels
+        # are still children of root in the widget hierarchy.
         _walk(self.root)
+
+        # ttk widgets (the event-type Combobox, the scrollbar) don't expose
+        # plain 'bg'/'fg' options, so the generic walk above skips them via
+        # the TclError catch. Theme them explicitly through ttk.Style.
+        style = ttk.Style()
+        style.configure('TCombobox',
+                         fieldbackground=styles.SURFACE,
+                         background=styles.SURFACE,
+                         foreground=styles.TEXT_FG)
+        style.map('TCombobox',
+                  fieldbackground=[('readonly', styles.SURFACE)],
+                  foreground=[('readonly', styles.TEXT_FG)])
+        style.configure('Vertical.TScrollbar',
+                         background=styles.SURFACE,
+                         troughcolor=styles.BG)
+
+        # Note: the week grid squares themselves are untouched on purpose -
+        # their colours (past/current/future/custom label/event category)
+        # are semantic, not theme chrome, and should stay the same
+        # regardless of light or dark mode.
 
     def _build_controls(self):
         '''
@@ -290,10 +310,10 @@ class App:
         # Light and dark mode toggle.
         self.theme_icon_image = self._load_icon(get_resource_path("icons/light mode.png"))
 
-        theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image, cursor="x_cursor")
+        theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image)
         theme_button.grid(row=0, column=3, padx=5, ipadx=10, ipady=10)
 
-        # theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
+        theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
         theme_button.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Toggle theme", event=event), add="+")
         theme_button.bind("<Motion>", self._update_tooltip_position, add='+')
         theme_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
@@ -716,7 +736,15 @@ class App:
 
     def update_popup_background(self, event=None):
             event_type = self.event_type_dropdown.get()
-            new_background_colour = styles.event_type_colours[event_type]
+
+            # "Select Category" is stored in styles.event_type_colours as a
+            # snapshot of styles.BG taken when styles.py was first imported,
+            # so it doesn't track theme changes made afterwards. Use the
+            # live styles.BG for that case instead.
+            if not event_type or event_type == "Select Category":
+                new_background_colour = styles.BG
+            else:
+                new_background_colour = styles.event_type_colours.get(event_type, styles.BG)
     
             # Set the popup background
             self.week_note_popup.config(bg=new_background_colour)
@@ -792,7 +820,7 @@ class App:
         # Create the 4 Canvas Preview widgets
         preview = tk.Canvas(
             img_row,
-            bg=styles.FUTURE_COLOR,
+            bg=styles.SURFACE,
             width=1,
             height=row_height * 2,
             highlightthickness=0
@@ -801,7 +829,7 @@ class App:
 
         preview_1 = tk.Canvas(
             img_row,
-            bg=styles.FUTURE_COLOR,
+            bg=styles.SURFACE,
             width=1,
             height=row_height * 2,
             highlightthickness=0
@@ -810,7 +838,7 @@ class App:
 
         preview_2 = tk.Canvas(
             img_row,
-            bg=styles.FUTURE_COLOR,
+            bg=styles.SURFACE,
             width=1,
             height=row_height,
             highlightthickness=0
@@ -819,7 +847,7 @@ class App:
 
         preview_3 = tk.Canvas(
             img_row,
-            bg=styles.FUTURE_COLOR,
+            bg=styles.SURFACE,
             width=1,
             height=row_height,
             highlightthickness=0
@@ -1034,7 +1062,7 @@ class App:
     def highlight_background(self, event=None):
         ''' Update the background colour to indicate hovering. '''
         if event and event.widget:
-            event.widget.config(bg = styles.FUTURE_COLOR)
+            event.widget.config(bg = styles.SURFACE)
 
     def reset_background(self, event=None):
         ''' Update the background colour to the default. '''
