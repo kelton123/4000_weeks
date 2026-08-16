@@ -35,6 +35,7 @@ class App:
         self._click_pending = None   # after() ID for delayed single-click
         self._tooltip_win:  tk.Toplevel | None = None
         self._tooltip_week: int | None = None
+        self._tooltip_buttons: tk.Toplevel | None = None
 
         self._build_ui()
         self._refresh()
@@ -153,8 +154,12 @@ class App:
 
         # Bind clicking the birthday label to allow a new date to be visualised.
         self.birthday.bind("<Button-1>", lambda event: self.open_birthday_popup())
-        self.birthday.bind("<Enter>", self.on_enter)
-        self.birthday.bind("<Leave>", self.on_leave)
+        self.birthday.bind("<Enter>", self.highlight_background, add="+")
+        self.birthday.bind("<Leave>", self.reset_background, add="+")
+
+        self.birthday.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Click to change the date", event=event), add="+")
+        self.birthday.bind("<Motion>", self._update_tooltip_position, add='+')
+        self.birthday.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
     def _load_icon(self, path: str, size: tuple = (20, 20)) -> ImageTk.PhotoImage:
         '''
@@ -489,7 +494,49 @@ class App:
         self._tooltip_week = None
 
     # ── Tooltip ───────────────────────────────────────────────────────────────
+    # Create the buttons Tooltip
+    def _show_tooltip_buttons(self, tooltip_text: str, event: tk.Event= None):
+        # Hide this tooltip to prevent duplicates
+        self._hide_tooltip_buttons()
 
+        if event is None or not hasattr(event, 'x_root'):
+            return
+
+        # Get the mouse coordinates
+        screen_x = event.x_root
+        screen_y = event.y_root
+
+        # Create the tooltip label
+        tooltip_label = tk.Toplevel(self.root)
+        tooltip_label.overrideredirect(True)
+        tooltip_label.config(bg=styles.BG)
+        tooltip_label.attributes('-topmost', True)
+
+        # Create the label widget
+        widgets.BodyLabel(tooltip_label, text=tooltip_text).pack(anchor='w', padx=10, pady=5)
+
+        tooltip_label.update_idletasks()
+        tooltip_label.geometry(f'+{screen_x + 14}+{screen_y + 14}')
+        self._tooltip_buttons = tooltip_label
+
+    # Update the tooltip position
+    def _update_tooltip_position(self, event: tk.Event=None):
+        """Updates tooltip position as the cursor moves across the widget."""
+        if self._tooltip_buttons and event:
+            screen_x = event.x_root
+            screen_y = event.y_root
+            self._tooltip_buttons.geometry(f'+{screen_x + 14}+{screen_y + 14}')
+
+    # Destroy the buttons tooltip
+    def _hide_tooltip_buttons(self, event = tk.Event):
+        if self._tooltip_buttons:
+            try:
+                self._tooltip_buttons.destroy()
+            except tk.TclError:
+                pass
+            self._tooltip_buttons = None
+
+    # Grid Tooltip
     def _show_tooltip(self, week_num: int, screen_x: int, screen_y: int):
         self._hide_tooltip()
 
@@ -892,12 +939,12 @@ class App:
 
         return popup
 
-    def on_enter(self, event=None):
+    def highlight_background(self, event=None):
         ''' Update the background colour to indicate hovering. '''
         if event and event.widget:
             event.widget.config(bg = styles.FUTURE_COLOR)
 
-    def on_leave(self, event=None):
+    def reset_background(self, event=None):
         ''' Update the background colour to the default. '''
         if event and event.widget:
             event.widget.config(bg = styles.BG)
