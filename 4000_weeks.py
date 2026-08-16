@@ -403,11 +403,6 @@ class App:
                         wc.image_paths = list(note.get('image_paths') or [])
                         wc.category    = note.get('category', 'Select Category')
 
-        # Update the year labels
-        birth_year = int(self.dob_var.get()[0:4])
-        for i, label_id in enumerate(self.years_labels):
-            self.canvas.itemconfig(label_id, text= str(birth_year + (5*i)))
-
     def _colour_for_week(self, week_num: int, weeks_lived: int = None) -> str:
         '''
         Works out which colour a given week square should be, in priority order:
@@ -1195,6 +1190,9 @@ class App:
 
         self._photo_cache.clear()
         self._refresh()
+
+        # Update the date heading
+        self.birthday.config(text=self._dob.strftime("%d-%m-%Y"))
 
 
 def main():
