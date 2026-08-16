@@ -5,3 +5,5 @@ __pycache__/
 .claude/
 1980 text.json
 1998_test.json
+packaging/build/
+packaging/dist/

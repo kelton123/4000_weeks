@@ -13,6 +13,12 @@ import widgets
 # Style Constants
 import styles
 
+def get_resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for py2app bundle."""
+    # os.path.abspath(__file__) points inside Contents/Resources/ when running in py2app
+    base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, relative_path)
+
 
 class App:
     def __init__(self, root: tk.Tk):
@@ -258,7 +264,7 @@ class App:
         tool_frame.columnconfigure([0,4], weight=3)
 
         # OPEN FILE BUTTON TO IMPORT SAVED FILES
-        self.open_folder_image = self._load_icon("icons/open_white.png")
+        self.open_folder_image = self._load_icon(get_resource_path("icons/open_white.png"))
 
         open_button = widgets.ButtonImage(tool_frame, image=self.open_folder_image)
         open_button.grid(row=0, column=1, padx=5, ipadx=10, ipady=10)
@@ -269,7 +275,7 @@ class App:
         open_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
         # SAVE VISUALISATION BUTTON
-        self.save_icon_image = self._load_icon("icons/save_white.png")
+        self.save_icon_image = self._load_icon(get_resource_path("icons/save_white.png"))
 
         save_button = widgets.ButtonImage(tool_frame, image=self.save_icon_image)
         save_button.grid(row=0, column=2, padx=5, ipadx=10, ipady=10)
@@ -280,7 +286,7 @@ class App:
         save_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
         # Light and dark mode toggle.
-        self.theme_icon_image = self._load_icon("icons/light mode.png")
+        self.theme_icon_image = self._load_icon(get_resource_path("icons/light mode.png"))
 
         theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image)
         theme_button.grid(row=0, column=3, padx=5, ipadx=10, ipady=10)
@@ -1196,7 +1202,16 @@ class App:
 
 
 def main():
+
+    def on_closing():
+        '''
+        Open a popup when use clicks the window close button to confirm if they do want to quit the app.
+        '''
+        if messagebox.askokcancel("Quit", "Do you want to close the app? All unsaved weeks will be lost!"):
+            root.destroy()
+
     root = tk.Tk()
+    root.protocol("WM_DELETE_WINDOW", on_closing)
 
     App(root)
     root.mainloop()

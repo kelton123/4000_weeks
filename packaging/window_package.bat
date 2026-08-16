@@ -1,0 +1,1 @@
+pyinstaller 4000_Weeks.spec
