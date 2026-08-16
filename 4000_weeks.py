@@ -578,8 +578,6 @@ class App:
 
         note        = self._week_notes.get(week_num)
         has_note    = self._has_note_data(note)
-        label_entry = (self._custom_labels[self._week_labels[week_num]]
-                       if week_num in self._week_labels else None)
         category    = note.get('category') if note else None
         has_category = bool(category and category != 'Select Category')
 
@@ -591,27 +589,15 @@ class App:
         pad = 10
 
         # Week Information Label that is always shown.
-        widgets.CaptionLabel(win, text=header).pack(anchor='w', padx=pad, pady=2)
-
-        # Legend label swatch (if this week belongs to a custom label).
-        if label_entry:
-            lf = widgets.Frame(win)
-            lf.pack(anchor='w', padx=pad, pady=(0, 4))
-            dot = tk.Canvas(lf, width=10, height=10, bg=styles.BG, highlightthickness=0)
-            dot.create_rectangle(0, 0, 10, 10, fill=label_entry['color'], outline='')
-            dot.pack(side='left', padx=(0, 5))
-            widgets.BodyLabel(lf, text=label_entry['name']).pack(side='left')
+        week_info = widgets.CaptionLabel(win, text=header)
+        week_info.pack(anchor='w', padx=pad, pady=2)
 
         # Event category swatch (colour picked from the event type combobox).
         if has_category:
-            cf = widgets.Frame(win)
-            cf.pack(anchor='w', padx=pad, pady=(0, 4))
-            dot = tk.Canvas(cf, width=10, height=10, bg=styles.BG, highlightthickness=0)
-            dot.create_rectangle(0, 0, 10, 10,
-                                  fill=styles.event_type_colours.get(category, styles.PAST_COLOR),
-                                  outline='')
-            dot.pack(side='left', padx=(0, 5))
-            widgets.BodyLabel(cf, text=category).pack(side='left')
+            # Category name
+            category_name = widgets.BodyLabel(win, text=category)
+            category_name.pack(side='left', fill="x", anchor="n")
+
 
         # Track images_frame outside the conditional block
         images_frame = None
@@ -673,6 +659,29 @@ class App:
         win.update_idletasks()
         win.geometry(f'+{screen_x + 20}+{screen_y + 20}')
         self._tooltip_win = win
+
+        def _update_widget_backgrounds_to_category():
+            if category:
+                category_colour = styles.event_type_colours.get(category, styles.PAST_COLOR)
+
+                # label background
+                win.config(bg=category_colour)
+
+                # week information
+                week_info.config(bg=category_colour)
+
+                # Category name
+                category_name.config(bg=category_colour)
+
+                # Image row
+                body.config(bg=category_colour)
+                images_frame.config(bg=category_colour)
+
+                # Description
+                description_frame.config(bg=category_colour)
+                description_label.config(bg=category_colour)
+
+        _update_widget_backgrounds_to_category()
 
     def _hide_tooltip(self):
         if self._tooltip_win:
