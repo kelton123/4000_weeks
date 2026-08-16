@@ -589,14 +589,14 @@ class App:
         pad = 10
 
         # Week Information Label that is always shown.
-        week_info = widgets.CaptionLabel(win, text=header)
-        week_info.pack(anchor='w', padx=pad, pady=2)
+        week_info = widgets.H3Label(win, text=header, anchor="w")
+        week_info.pack(anchor='w', padx=pad, pady=2, fill="x")
 
         # Event category swatch (colour picked from the event type combobox).
         if has_category:
             # Category name
-            category_name = widgets.BodyLabel(win, text=category)
-            category_name.pack(side='left', fill="x", anchor="n")
+            category_name = widgets.BodyLabel(win, text=f"Category: {category}", anchor="w")
+            category_name.pack(fill="x", anchor="n", pady=4, padx=pad)
 
 
         # Track images_frame outside the conditional block
@@ -629,9 +629,9 @@ class App:
 
                 # Layout the all images in a row
                 for i, photo in enumerate(thumbs):
-                    lbl = widgets.BodyLabel(images_frame, image=photo)
-                    lbl.image = photo
-                    lbl.grid(row=0, column=i, padx=2, pady=2)
+                    image_label = widgets.BodyLabel(images_frame, image=photo)
+                    image_label.image = photo
+                    image_label.grid(row=0, column=i, padx=2, pady=2)
 
 
             # If the week already has a description. Placed under the images.
@@ -640,8 +640,8 @@ class App:
                 description_frame = widgets.Frame(win)
                 description_frame.pack(fill="x", padx=pad, pady=pad)
 
-                description_label = widgets.BodyLabel(description_frame, text=desc, justify="left")
-                description_label.pack(side='left', anchor='s', fill="x", expand=True)
+                description_label = widgets.BodyLabel(description_frame, text=desc, justify="left", anchor="w")
+                description_label.pack(anchor='s', fill="x")
 
                 # Update wraplength dynamically when images_frame is rendered/resized
                 if images_frame:
@@ -676,6 +676,7 @@ class App:
                 # Image row
                 body.config(bg=category_colour)
                 images_frame.config(bg=category_colour)
+                image_label.config(bg=category_colour)
 
                 # Description
                 description_frame.config(bg=category_colour)
