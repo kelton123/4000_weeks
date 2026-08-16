@@ -148,11 +148,13 @@ class App:
         frame.pack_propagate(False)
 
         # The active birthday - default text is "Add birthday".
-        self.birthday = widgets.H1Label(frame, text="Add Birthday")
-        self.birthday.pack()
+        self.birthday = widgets.H1Label(frame, text="Add Birthday", cursor="hand2")
+        self.birthday.pack(ipadx=50)
 
         # Bind clicking the birthday label to allow a new date to be visualised.
         self.birthday.bind("<Button-1>", lambda event: self.open_birthday_popup())
+        self.birthday.bind("<Enter>", self.on_enter)
+        self.birthday.bind("<Leave>", self.on_leave)
 
     def _load_icon(self, path: str, size: tuple = (20, 20)) -> ImageTk.PhotoImage:
         '''
@@ -890,13 +892,22 @@ class App:
 
         return popup
 
+    def on_enter(self, event=None):
+        ''' Update the background colour to indicate hovering. '''
+        if event and event.widget:
+            event.widget.config(bg = styles.FUTURE_COLOR)
+
+    def on_leave(self, event=None):
+        ''' Update the background colour to the default. '''
+        if event and event.widget:
+            event.widget.config(bg = styles.BG)
 
     def open_birthday_popup(self, event=None):
         '''
         When the user clicks on the birthday label, open a popup where the
         user can type a new birthday date to visualise.
         '''
-        popup = self.create_popup(self.root, "Update Birthday", 450, 200)
+        popup = self.create_popup(self.root, "Update Birthday", 400, 150)
 
         # Create a label for what the user has to input.
         lbl_name = widgets.BodyLabel(popup, text="Birthday (DD-MM-YYYY)")
