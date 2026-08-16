@@ -54,10 +54,6 @@ class ButtonTextActive(tk.Button):
         super().__init__(parent, **defaults)
 
         # Marks this widget as always using the fixed ACCENT/ACCENT_FG
-        # pairing rather than the live theme colours, so App._toggle_theme
-        # knows to skip repainting it - see the note there for why that
-        # matters (ACCENT_FG intentionally shares a literal value with
-        # BG_DARK, which would otherwise get swept up by the theme walk).
         self.theme_locked = True
 
 # Icon button default
