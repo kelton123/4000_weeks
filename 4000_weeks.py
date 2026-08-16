@@ -43,6 +43,21 @@ class App:
 
     # ── Window setup ──────────────────────────────────────────────────────────
 
+    def _take_focus(self, event: tk.Event = None):
+        '''
+        Used to take the focus from sub-widgets like entry or comboxes and make the clicked widget's toplevel
+        window to take the focus.
+        '''
+        if  event or event.widget:
+            widget = event.widget
+
+            if isinstance(widget, (tk.Entry, tk.Text, ttk.Entry, ttk.Combobox, tk.Spinbox)):
+                widget.focus_set()
+                return
+
+            # Focus background widgets like frames, canvases, labels and toplevel windows.
+            widget.winfo_toplevel().focus_set()
+
     def _center(self, width: int, height: int):
         '''
         Used to center the window in the screen on startup.
@@ -669,6 +684,9 @@ class App:
                 except Exception as error:
                     print(f"{widget} could not be updated: {error}")
                     pass
+
+            # Reset the popup as the focus
+            self.week_note_popup.focus_set()
             
     def _open_note_dialog(self, week_num: int):
         self._hide_tooltip()
@@ -689,6 +707,8 @@ class App:
         self.week_note_popup.configure(bg=styles.BG, padx=20, pady=20)
         self.week_note_popup.resizable(False, False)
         self.week_note_popup.grab_set()
+
+        self.week_note_popup.bind("<Button-1>", self._take_focus)
 
         sw, sh = self.get_screen_dims()
         self.week_note_popup.geometry(f'450x580+{(sw - 440) // 2}+{(sh - 320) // 2}')
@@ -915,6 +935,9 @@ class App:
         # category (e.g. reopening a week that was already saved).
         self.update_popup_background()
 
+        # Set the category combobox in focus
+        self.event_type_dropdown.focus_set()
+
     # ── Update Birthday ───────────────────────────────────────────────────────────
 
     def centre_launch_popup(self, root_window, popup_window, window_width, window_height):
@@ -943,6 +966,8 @@ class App:
         popup.title(title)
         popup.resizable(False, False)
         popup.config(padx=15, pady=15, bg=styles.BG)
+
+        popup.bind("<Button-1>", self._take_focus)
 
         # Launch the popup in the centre of the root window.
         self.centre_launch_popup(main_window, popup, width, height)
