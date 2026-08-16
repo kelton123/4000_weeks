@@ -157,7 +157,7 @@ class App:
         self.birthday.bind("<Enter>", self.highlight_background, add="+")
         self.birthday.bind("<Leave>", self.reset_background, add="+")
 
-        self.birthday.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Click to change the date", event=event), add="+")
+        self.birthday.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Update date", event=event), add="+")
         self.birthday.bind("<Motion>", self._update_tooltip_position, add='+')
         self.birthday.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
@@ -247,21 +247,33 @@ class App:
 
         open_button = widgets.ButtonImage(tool_frame, image=self.open_folder_image)
         open_button.grid(row=0, column=1, padx=5, ipadx=10, ipady=10)
+
         open_button.bind("<Button-1>", lambda event: self.load_data())
+        open_button.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Open file", event=event), add="+")
+        open_button.bind("<Motion>", self._update_tooltip_position, add='+')
+        open_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
         # SAVE VISUALISATION BUTTON
         self.save_icon_image = self._load_icon("icons/save_white.png")
 
         save_button = widgets.ButtonImage(tool_frame, image=self.save_icon_image)
         save_button.grid(row=0, column=2, padx=5, ipadx=10, ipady=10)
+
         save_button.bind("<Button-1>", lambda event: self.save_data())
+        save_button.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Save file", event=event), add="+")
+        save_button.bind("<Motion>", self._update_tooltip_position, add='+')
+        save_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
         # Light and dark mode toggle.
         self.theme_icon_image = self._load_icon("icons/light mode.png")
 
         theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image)
         theme_button.grid(row=0, column=3, padx=5, ipadx=10, ipady=10)
+
         theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
+        theme_button.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Toggle theme", event=event), add="+")
+        theme_button.bind("<Motion>", self._update_tooltip_position, add='+')
+        theme_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
         
         # Spacer
         widgets.FrameSpacerH100(frame).pack(anchor='center', fill='both', expand=True)
@@ -513,10 +525,12 @@ class App:
         tooltip_label.attributes('-topmost', True)
 
         # Create the label widget
-        widgets.BodyLabel(tooltip_label, text=tooltip_text).pack(anchor='w', padx=10, pady=5)
+        tooltip_border = tk.Frame(tooltip_label, bg=styles.NOW_COLOR, padx=1, pady=1)
+        tooltip_border.pack()
+        widgets.CaptionLabel(tooltip_border, text=tooltip_text).pack(anchor='w', ipadx=10, ipady=2)
 
         tooltip_label.update_idletasks()
-        tooltip_label.geometry(f'+{screen_x + 14}+{screen_y + 14}')
+        tooltip_label.geometry(f'+{screen_x + 20}+{screen_y + 20}')
         self._tooltip_buttons = tooltip_label
 
     # Update the tooltip position
@@ -525,7 +539,7 @@ class App:
         if self._tooltip_buttons and event:
             screen_x = event.x_root
             screen_y = event.y_root
-            self._tooltip_buttons.geometry(f'+{screen_x + 14}+{screen_y + 14}')
+            self._tooltip_buttons.geometry(f'+{screen_x + 20}+{screen_y + 20}')
 
     # Destroy the buttons tooltip
     def _hide_tooltip_buttons(self, event = tk.Event):
