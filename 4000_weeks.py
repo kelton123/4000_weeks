@@ -206,6 +206,8 @@ class App:
         @return : N/A
         @raise  : N/A
         '''
+
+        # TODO: implement a working version of the theme toggle
         if getattr(self, '_dark_mode', True):
             # Switching TO light mode.
             colour_map = {
@@ -288,10 +290,10 @@ class App:
         # Light and dark mode toggle.
         self.theme_icon_image = self._load_icon(get_resource_path("icons/light mode.png"))
 
-        theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image)
+        theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image, cursor="x_cursor")
         theme_button.grid(row=0, column=3, padx=5, ipadx=10, ipady=10)
 
-        theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
+        # theme_button.bind("<Button-1>", lambda event: self._toggle_theme())
         theme_button.bind("<Enter>", lambda event: self._show_tooltip_buttons(tooltip_text="Toggle theme", event=event), add="+")
         theme_button.bind("<Motion>", self._update_tooltip_position, add='+')
         theme_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
