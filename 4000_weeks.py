@@ -250,7 +250,7 @@ class App:
         frame.pack(pady=(6, 10))
 
         # Default birthday value.
-        self.dob_var = tk.StringVar(value='1998-10-15')
+        self.dob_var = tk.StringVar(value=datetime.today().strftime('%Y-%m-%d'))
 
         # Frame for the tools.
         tool_frame = widgets.Frame(frame, height=40, width=styles.CANVAS_WIDTH)
