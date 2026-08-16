@@ -43,6 +43,8 @@ class App:
         self._tooltip_week: int | None = None
         self._tooltip_buttons: tk.Toplevel | None = None
 
+        self._dark_mode = True
+
         self._build_ui()
         self._refresh()
         self.root.after(50, self._fix_scrollregion)
@@ -223,23 +225,23 @@ class App:
                 styles.BG_DARK, styles.TEXT_FG_DARK, styles.SURFACE_DARK)
 
         def _walk(widget):
-            # Widgets that opt out of the live theme (e.g. ButtonTextActive,
-            # which always wants a fixed high-contrast "accent" look) are
-            # left alone - their bg/fg were set from styles.ACCENT /
-            # styles.ACCENT_FG at construction and should stay that way
-            # regardless of light/dark mode.
             if not getattr(widget, 'theme_locked', False):
                 for option in ('bg', 'fg'):
                     try:
                         current = widget.cget(option)
                     except tk.TclError:
                         continue
+
                     new_colour = colour_map.get(current)
                     if new_colour:
                         try:
                             widget.configure(**{option: new_colour})
                         except tk.TclError:
                             pass
+            # Swap icon variants for any themed image buttons we encounter.
+            if isinstance(widget, widgets.ButtonImage):
+                widget.update_theme_image(self._dark_mode)
+
             for child in widget.winfo_children():
                 _walk(child)
 
@@ -292,9 +294,15 @@ class App:
         tool_frame.columnconfigure([0,4], weight=3)
 
         # OPEN FILE BUTTON TO IMPORT SAVED FILES
-        self.open_folder_image = self._load_icon(get_resource_path("icons/open_folder_darkmode.png"))
+        self.open_folder_image_dark = self._load_icon(get_resource_path("icons/open_folder_darkmode.png"))
+        self.open_folder_image_light = self._load_icon(get_resource_path("icons/open_folder_lightmode.png"))
 
-        open_button = widgets.ButtonImage(tool_frame, image=self.open_folder_image)
+        open_button = widgets.ButtonImage(
+            tool_frame,
+            image_dark  = self.open_folder_image_dark,
+            image_light = self.open_folder_image_light,
+            dark_mode   = self._dark_mode
+            )
         open_button.grid(row=0, column=1, padx=5, ipadx=10, ipady=10)
 
         open_button.bind("<Button-1>", lambda event: self.load_data())
@@ -303,9 +311,15 @@ class App:
         open_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
         # SAVE VISUALISATION BUTTON
-        self.save_icon_image = self._load_icon(get_resource_path("icons/save_file_darkmode.png"))
+        self.save_file_image_dark = self._load_icon(get_resource_path("icons/save_file_darkmode.png"))
+        self.save_file_image_light = self._load_icon(get_resource_path("icons/save_file_lightmode.png"))
 
-        save_button = widgets.ButtonImage(tool_frame, image=self.save_icon_image)
+        save_button = widgets.ButtonImage(
+            tool_frame,
+            image_dark  = self.save_file_image_dark,
+            image_light = self.save_file_image_light,
+            dark_mode   = self._dark_mode
+            )
         save_button.grid(row=0, column=2, padx=5, ipadx=10, ipady=10)
 
         save_button.bind("<Button-1>", lambda event: self.save_data())
@@ -314,9 +328,15 @@ class App:
         save_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
         # Light and dark mode toggle.
-        self.theme_icon_image = self._load_icon(get_resource_path("icons/light mode.png"))
+        self.theme_icon_image_dark = self._load_icon(get_resource_path("icons/light mode.png"))
+        self.theme_icon_image_light = self._load_icon(get_resource_path("icons/dark mode.png"))
 
-        theme_button = widgets.ButtonImage(tool_frame, image=self.theme_icon_image)
+        theme_button = widgets.ButtonImage(
+            tool_frame,
+            image_dark  = self.theme_icon_image_dark,
+            image_light = self.theme_icon_image_light,
+            dark_mode   = self._dark_mode
+            )
         theme_button.grid(row=0, column=3, padx=5, ipadx=10, ipady=10)
 
         theme_button.bind("<Button-1>", lambda event: self._toggle_theme())

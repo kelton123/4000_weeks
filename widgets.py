@@ -58,15 +58,25 @@ class ButtonTextActive(tk.Button):
 
 # Icon button default
 class ButtonImage(tk.Label):
-    def __init__(self, parent, **kwargs):
+    def __init__(self, parent,image_dark, image_light, dark_mode=True, **kwargs):
+        # Store both a light and dark mode version of the png to be toggled
+        self.image_dark  = image_dark
+        self.image_light = image_light
+
+        current_image = image_dark if dark_mode else image_light
+
         defaults = {
             "bg"     : styles.BG,
             "cursor" : "hand2",
+            "image"  : current_image,
             "padx"   : 5,
             "pady"   : 5
         }
         defaults.update(kwargs)
         super().__init__(parent, **defaults)
+
+        # prevent garbage collection of the image
+        self.image = current_image
 
         # Bind the mouse entering and leaving to update the background colour.
         self.bind("<Enter>", self.on_enter)
@@ -79,6 +89,15 @@ class ButtonImage(tk.Label):
     def on_leave(self, event):
         ''' Update the background colour to the default. '''
         self.config(bg = styles.BG)
+
+    def update_theme_image(self, dark_mode: bool):
+        '''
+        Swaps between the light/dark icon variants.
+        Called by App._toggle_theme() during the widget walk.
+        '''
+        new_image = self.image_dark if dark_mode else self.image_light
+        self.configure(image=new_image)
+        self.image = new_image  # prevent garbage collection
 
 
 # ── LABEL WIDGETS ────────────────────────────────────────────────────────────
