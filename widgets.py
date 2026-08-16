@@ -129,6 +129,17 @@ class BodyLabel(tk.Label):
         defaults.update(kwargs)
         super().__init__(parent, **defaults)
 
+class BodyBoldLabel(tk.Label):
+    def __init__(self, parent, **kwargs):
+        defaults = {
+            "font" : styles.BODY_BOLD,
+            "fg"   : styles.TEXT_FG,
+            "bg"   : styles.BG,
+            
+        }
+        defaults.update(kwargs)
+        super().__init__(parent, **defaults)
+
 
 # Caption Text
 class CaptionLabel(tk.Label):

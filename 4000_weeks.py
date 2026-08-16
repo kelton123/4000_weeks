@@ -572,7 +572,7 @@ class App:
         row, col = divmod(week_num, styles.COLS)
         try:
             week_start = self._dob + timedelta(weeks=week_num)
-            header = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
+            header = f'{row} Years & {col + 1} Weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
             header = f'{row} years & {col + 1} weeks'
 
@@ -589,13 +589,17 @@ class App:
         pad = 10
 
         # Week Information Label that is always shown.
-        week_info = widgets.H3Label(win, text=header, anchor="w")
-        week_info.pack(anchor='w', padx=pad, pady=2, fill="x")
+        if has_note or has_category:
+            week_info = widgets.BodyBoldLabel(win, text=header, anchor="w")
+            week_info.pack(anchor='w', padx=pad, pady=2, fill="x")
+        else:
+            week_info = widgets.CaptionLabel(win, text=header, anchor="w")
+            week_info.pack(anchor='w', padx=pad, pady=2, fill="x")
 
         # Event category swatch (colour picked from the event type combobox).
         if has_category:
             # Category name
-            category_name = widgets.BodyLabel(win, text=f"Category: {category}", anchor="w")
+            category_name = widgets.BodyLabel(win, text=category, anchor="w")
             category_name.pack(fill="x", anchor="n", pady=4, padx=pad)
 
 
@@ -605,7 +609,7 @@ class App:
         # Images for that week
         if has_note:
             body = widgets.Frame(win)
-            body.pack(fill='x', padx=pad, pady=(4, pad))
+            body.pack(fill='x', padx=pad, pady=4)
 
             # Render every saved image (up to 4) as small thumbnails in a row.
             img_paths = [p for p in (note.get('image_paths') or [])
@@ -628,17 +632,20 @@ class App:
                 thumbs = self._photo_cache.get(week_num, [])
 
                 # Layout the all images in a row
+                self.image_labels = []
                 for i, photo in enumerate(thumbs):
                     image_label = widgets.BodyLabel(images_frame, image=photo)
                     image_label.image = photo
-                    image_label.grid(row=0, column=i, padx=2, pady=2)
+                    image_label.grid(row=0, column=i, padx=2, pady=2, sticky="s")
+
+                    self.image_labels.append(image_label)
 
 
             # If the week already has a description. Placed under the images.
             desc = note.get('description', '').strip()
             if desc:
                 description_frame = widgets.Frame(win)
-                description_frame.pack(fill="x", padx=pad, pady=pad)
+                description_frame.pack(fill="x", padx=pad, pady=(2, 20))
 
                 description_label = widgets.BodyLabel(description_frame, text=desc, justify="left", anchor="w")
                 description_label.pack(anchor='s', fill="x")
@@ -676,7 +683,9 @@ class App:
                 # Image row
                 body.config(bg=category_colour)
                 images_frame.config(bg=category_colour)
-                image_label.config(bg=category_colour)
+
+                for image_label in self.image_labels:
+                    image_label.config(bg=category_colour)
 
                 # Description
                 description_frame.config(bg=category_colour)
