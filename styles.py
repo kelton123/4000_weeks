@@ -35,6 +35,13 @@ BG_LIGHT      = "#f2f2f7"
 TEXT_FG_LIGHT = "#121212"
 SURFACE_LIGHT = "#e1e1e6"
 
+# "Accent" colours: for elements that should draw attention and stay the
+# same regardless of theme (e.g. a primary/active button), rather than
+# tracking the live BG/TEXT_FG swap the toggle performs. Fixed to the
+# dark-mode NOW_COLOR/BG pairing so it always reads clearly.
+ACCENT        = NOW_COLOR
+ACCENT_FG     = BG_DARK
+
 
 # Label Colours
 RED           = "#d91d2a"

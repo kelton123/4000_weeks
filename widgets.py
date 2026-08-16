@@ -44,14 +44,21 @@ class ButtonTextActive(tk.Button):
     def __init__(self, parent, **kwargs):
         defaults = {
             "font"   : styles.BODY_BOLD,
-            "bg"     : styles.NOW_COLOR,
-            "fg"     : styles.BG,
+            "bg"     : styles.ACCENT,
+            "fg"     : styles.ACCENT_FG,
             "relief" : 'flat',
             "cursor" :'hand2',
             "padx"   : 14
         }
         defaults.update(kwargs)
         super().__init__(parent, **defaults)
+
+        # Marks this widget as always using the fixed ACCENT/ACCENT_FG
+        # pairing rather than the live theme colours, so App._toggle_theme
+        # knows to skip repainting it - see the note there for why that
+        # matters (ACCENT_FG intentionally shares a literal value with
+        # BG_DARK, which would otherwise get swept up by the theme walk).
+        self.theme_locked = True
 
 # Icon button default
 class ButtonImage(tk.Label):

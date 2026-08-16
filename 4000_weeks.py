@@ -223,17 +223,23 @@ class App:
                 styles.BG_DARK, styles.TEXT_FG_DARK, styles.SURFACE_DARK)
 
         def _walk(widget):
-            for option in ('bg', 'fg'):
-                try:
-                    current = widget.cget(option)
-                except tk.TclError:
-                    continue
-                new_colour = colour_map.get(current)
-                if new_colour:
+            # Widgets that opt out of the live theme (e.g. ButtonTextActive,
+            # which always wants a fixed high-contrast "accent" look) are
+            # left alone - their bg/fg were set from styles.ACCENT /
+            # styles.ACCENT_FG at construction and should stay that way
+            # regardless of light/dark mode.
+            if not getattr(widget, 'theme_locked', False):
+                for option in ('bg', 'fg'):
                     try:
-                        widget.configure(**{option: new_colour})
+                        current = widget.cget(option)
                     except tk.TclError:
-                        pass
+                        continue
+                    new_colour = colour_map.get(current)
+                    if new_colour:
+                        try:
+                            widget.configure(**{option: new_colour})
+                        except tk.TclError:
+                            pass
             for child in widget.winfo_children():
                 _walk(child)
 
