@@ -292,7 +292,7 @@ class App:
         tool_frame.columnconfigure([0,4], weight=3)
 
         # OPEN FILE BUTTON TO IMPORT SAVED FILES
-        self.open_folder_image = self._load_icon(get_resource_path("icons/open_white.png"))
+        self.open_folder_image = self._load_icon(get_resource_path("icons/open_folder_darkmode.png"))
 
         open_button = widgets.ButtonImage(tool_frame, image=self.open_folder_image)
         open_button.grid(row=0, column=1, padx=5, ipadx=10, ipady=10)
@@ -303,7 +303,7 @@ class App:
         open_button.bind("<Leave>", self._hide_tooltip_buttons, add="+")
 
         # SAVE VISUALISATION BUTTON
-        self.save_icon_image = self._load_icon(get_resource_path("icons/save_white.png"))
+        self.save_icon_image = self._load_icon(get_resource_path("icons/save_file_darkmode.png"))
 
         save_button = widgets.ButtonImage(tool_frame, image=self.save_icon_image)
         save_button.grid(row=0, column=2, padx=5, ipadx=10, ipady=10)
