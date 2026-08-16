@@ -708,10 +708,11 @@ class App:
         self.week_note_popup.resizable(False, False)
         self.week_note_popup.grab_set()
 
+        # Keyboard bindings
         self.week_note_popup.bind("<Button-1>", self._take_focus)
 
         sw, sh = self.get_screen_dims()
-        self.week_note_popup.geometry(f'450x580+{(sw - 440) // 2}+{(sh - 320) // 2}')
+        self.week_note_popup.geometry(f'450x580+{(sw - 440) // 2}+{(sh - 600) // 2}')
 
         # Date information at the top of the popup.
         date_title = widgets.H3Label(self.week_note_popup, text=title_text)
@@ -884,7 +885,7 @@ class App:
 
         self.popup_widgets.append(btn_row)
 
-        def _save():
+        def _save(event: tk.Event = None):
             desc     = description_box.get('1.0', 'end').strip()
             category = self.event_type_dropdown.get()
 
@@ -908,7 +909,7 @@ class App:
             # Close the popup
             self.week_note_popup.destroy()
 
-        def _clear():
+        def _clear(event: tk.Event = None):
             self._week_notes.pop(week_num, None)
             self._photo_cache.pop(week_num, None)
             self.event_type_dropdown.set("Select Category")
@@ -921,7 +922,10 @@ class App:
             # Repaint the square back to its default colour immediately.
             self._apply_week_colour(week_num)
 
-        cancel_popup_button = widgets.ButtonText(btn_row, text="Cancel", command=self.week_note_popup.destroy)
+        def _close(event: tk.Event = None):
+            self.week_note_popup.destroy()
+
+        cancel_popup_button = widgets.ButtonText(btn_row, text="Cancel", command=_close)
         cancel_popup_button.grid(row=0, column=0, sticky='nsew')
 
         clear_popup_button = widgets.ButtonText(btn_row, text="Clear", command=_clear) 
@@ -937,6 +941,11 @@ class App:
 
         # Set the category combobox in focus
         self.event_type_dropdown.focus_set()
+
+        # Bind keyboard shortcuts for the popup
+        self.week_note_popup.bind("<Return>", _save)
+        self.week_note_popup.bind("<Escape>", _close)
+        self.week_note_popup.bind("<Control-space>", _clear)
 
     # ── Update Birthday ───────────────────────────────────────────────────────────
 
