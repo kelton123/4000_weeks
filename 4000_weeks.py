@@ -590,7 +590,8 @@ class App:
 
         pad = 10
 
-        widgets.BodyLabel(win, text=header).pack(anchor='w', padx=pad, pady=(pad, 2))
+        # Week Information Label that is always shown.
+        widgets.CaptionLabel(win, text=header).pack(anchor='w', padx=pad, pady=2)
 
         # Legend label swatch (if this week belongs to a custom label).
         if label_entry:
@@ -612,6 +613,10 @@ class App:
             dot.pack(side='left', padx=(0, 5))
             widgets.BodyLabel(cf, text=category).pack(side='left')
 
+        # Track images_frame outside the conditional block
+        images_frame = None
+
+        # Images for that week
         if has_note:
             body = widgets.Frame(win)
             body.pack(fill='x', padx=pad, pady=(4, pad))
@@ -628,28 +633,45 @@ class App:
                     for p in img_paths[:4]:
                         try:
                             img = Image.open(p)
-                            img.thumbnail((110, 110))
+                            img.thumbnail((100, 100))
                             thumbs.append(ImageTk.PhotoImage(img))
                         except Exception:
                             pass
                     self._photo_cache[week_num] = thumbs
 
                 thumbs = self._photo_cache.get(week_num, [])
-                # Lay thumbnails out 2-per-row so the tooltip doesn't get too wide.
+
+                # Layout the all images in a row
                 for i, photo in enumerate(thumbs):
-                    r, c = divmod(i, 2)
                     lbl = widgets.BodyLabel(images_frame, image=photo)
                     lbl.image = photo
-                    lbl.grid(row=r, column=c, padx=2, pady=2)
+                    lbl.grid(row=0, column=i, padx=2, pady=2)
 
+
+            # If the week already has a description. Placed under the images.
             desc = note.get('description', '').strip()
             if desc:
-                widgets.BodyLabel(body, text=desc, wraplength=180, justify='left').pack(side='left', anchor='n')
-        else:
-            widgets.Frame(win, height=pad).pack()
+                description_frame = widgets.Frame(win)
+                description_frame.pack(fill="x", padx=pad, pady=pad)
+
+                description_label = widgets.BodyLabel(description_frame, text=desc, justify="left")
+                description_label.pack(side='left', anchor='s', fill="x", expand=True)
+
+                # Update wraplength dynamically when images_frame is rendered/resized
+                if images_frame:
+                    images_frame.bind(
+                        "<Configure>", 
+                        lambda event: description_label.config(wraplength=event.width)
+                    )
+                else:
+                    # Fallback: Wrap to description_frame width if there are no images
+                    description_frame.bind(
+                        "<Configure>", 
+                        lambda event: description_label.config(wraplength=event.width)
+                    )
 
         win.update_idletasks()
-        win.geometry(f'+{screen_x + 14}+{screen_y + 14}')
+        win.geometry(f'+{screen_x + 20}+{screen_y + 20}')
         self._tooltip_win = win
 
     def _hide_tooltip(self):
