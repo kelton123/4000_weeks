@@ -42,5 +42,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='',  # Sets your custom application icon
+    icon='../icons/app_icon_transparent.ico',  # Sets your custom application icon
 )
