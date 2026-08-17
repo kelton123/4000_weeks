@@ -1268,7 +1268,7 @@ def main():
 
     root = tk.Tk()
     root.protocol("WM_DELETE_WINDOW", on_closing)
-    root.iconbitmap(get_resource_path("icons/app_icon_transparent.ico"))
+    root.iconbitmap(get_resource_path("icons/app_icon.ico"))
 
     App(root)
     root.mainloop()
