@@ -1270,6 +1270,9 @@ def main():
     root.protocol("WM_DELETE_WINDOW", on_closing)
     root.iconbitmap(get_resource_path("icons/app_icon.ico"))
 
+    icon = tk.PhotoImage(file=get_resource_path("icons/app_icon.png"))
+    root.iconphoto(True, icon)
+
     App(root)
     root.mainloop()
 
