@@ -460,9 +460,8 @@ class App:
     def _colour_for_week(self, week_num: int, weeks_lived: int = None) -> str:
         '''
         Works out which colour a given week square should be, in priority order:
-        1) an explicit custom legend label assigned to the week.
-        2) the event category colour chosen for a saved week note.
-        3) the default past / current / future colour based on the date of birth.
+        1) the event category colour chosen for a saved week note.
+        2) the default past / current / future colour based on the date of birth.
 
         @param week_num    : The week index (year * COLS + week).
         @param weeks_lived : Optionally pass a pre-computed weeks_lived to avoid recalculating.
@@ -607,6 +606,7 @@ class App:
 
     # Destroy the buttons tooltip
     def _hide_tooltip_buttons(self, event = tk.Event):
+        """Destroys the tooltip widget."""
         if self._tooltip_buttons:
             try:
                 self._tooltip_buttons.destroy()
@@ -616,6 +616,13 @@ class App:
 
     # Grid Tooltip
     def _show_tooltip(self, week_num: int, screen_x: int, screen_y: int):
+        """
+        Create a small tooltip widget that follows the mouse to show week cell information.
+        
+        @param week_num: The week widget currently being hovered.
+        @param screen_x: The mouse's x coordinate.
+        @param screen_y: The mouse's y coordinate.
+        """
         self._hide_tooltip()
 
         row, col = divmod(week_num, styles.COLS)
@@ -717,6 +724,7 @@ class App:
         self._tooltip_win = win
 
         def _update_widget_backgrounds_to_category():
+            """Updates all background widgets in the popup to match the selected category type."""
             if category:
                 category_colour = styles.event_type_colours.get(category, styles.PAST_COLOR)
 
@@ -753,6 +761,7 @@ class App:
     # ── Note dialog ───────────────────────────────────────────────────────────
 
     def _has_note_data(self, note) -> bool:
+        """Helper function which returns what information a week widget has."""
         if not note:
             return False
         has_description = bool(note.get('description'))
@@ -763,10 +772,6 @@ class App:
     def update_popup_background(self, event=None):
             event_type = self.event_type_dropdown.get()
 
-            # "Select Category" is stored in styles.event_type_colours as a
-            # snapshot of styles.BG taken when styles.py was first imported,
-            # so it doesn't track theme changes made afterwards. Use the
-            # live styles.BG for that case instead.
             if not event_type or event_type == "Select Category":
                 new_background_colour = styles.BG
             else:
@@ -984,6 +989,7 @@ class App:
         self.popup_widgets.append(btn_row)
 
         def _save(event: tk.Event = None):
+            """Save the user's information to the selected week widget to be visualised."""
             desc     = description_box.get('1.0', 'end').strip()
             category = self.event_type_dropdown.get()
 
@@ -1008,6 +1014,7 @@ class App:
             self.week_note_popup.destroy()
 
         def _clear(event: tk.Event = None):
+            """Reset the information in the popup."""
             self._week_notes.pop(week_num, None)
             self._photo_cache.pop(week_num, None)
             self.event_type_dropdown.set("Select Category")
@@ -1021,6 +1028,7 @@ class App:
             self._apply_week_colour(week_num)
 
         def _close(event: tk.Event = None):
+            """Close the week widget data popup."""
             self.week_note_popup.destroy()
 
         cancel_popup_button = widgets.ButtonText(btn_row, text="Cancel", command=_close)
@@ -1168,6 +1176,7 @@ class App:
     # ── Save / Load ───────────────────────────────────────────────────────────
 
     def save_data(self):
+        """Write the added data to a JSON file."""
         path = filedialog.asksaveasfilename(
             defaultextension='.json',
             filetypes=[('JSON files', '*.json'), ('All files', '*.*')],
@@ -1209,6 +1218,7 @@ class App:
             json.dump(payload, f, indent=2)
 
     def load_data(self):
+        """Load the selected JSON file and update the grid visualisation."""
         path = filedialog.askopenfilename(
             filetypes=[('JSON files', '*.json'), ('All files', '*.*')],
             title='Load visualisation',
