@@ -31,48 +31,42 @@ Complete
 - Pillow     == 12.3.0
 
 ## Features
-### Functionality
-#### Project Tools
+### Project Tools
 - `Open` - Load a locally saved 4000 Week file.
 - `Save` - Save the current 4000 Week file.
 - `Theme Toggle` - Toggle the UI theme between light mode and dark mode.
 - `Update Birthday` - Open a popup to enter a new birthday to visualise 'DD-MM-YYYY'.
 
-#### Week Information
+### Week Information
 - `Week Category` - A list of categories to select from to summarise the events of that week.
 - `Images` - Upload 0-4 images per week of the events that happened in that week.
 - `Description` - A multi-line text entry to capture the details of the events that week.
 
 ## Screenshots
-Using the colour code format drop down.
+Grid visualisation for 01-01-2000 darkmode.
 
 
-![Swatch software showing the colour code dropdown UI.](readme_images/swatch_colour_format_dropdown.png "Colour format dropdown")
+![4000 Weeks app blank grid visualisation.](readme_screenshots/life_visualisation_grid_blank.png "Blank visualisation grid.")
 
-Mouse hover hint text for copying.
-
-
-![Swatch software showing the hint text to copy a colour code.](readme_images/swatch_copy_hint.png "Copy hint text")
-
-Delete project popup.
+Grid visualisation for 01-01-2000 lightmode.
 
 
-![Swatch software showing the delete project confirmation popup.](readme_images/swatch_delete_project_popup.png "Delete project confirmation popup")
+![4000 Weeks app blank grid visualisation.](readme_screenshots/life_visualisation_grid_blank_lightmode.png "Blank visualisation grid.")
 
-Mouse hover hint text for colour formatting.
-
-
-![Swatch software showing the hint text when formatting the colour code.](readme_images/swatch_hover_hint_format.png "Formatting the colour code")
-
-Adding a new swatch colour popup.
+Visualisation window with no birthdate.
 
 
-![Swatch software showing the add new swatch popup UI.](readme_images/swatch_new_swatch.png "Create swatch popup")
+![4000 Weeks app window with no birthday.](readme_screenshots/start_up_landing_window.png "Visualisation window with no birthdate.")
 
-Tint adjustment for all colour swatch cards.
+Add new birthday popup window.
 
 
-![Swatch software showing the tint adjustment tool in action.](readme_images/swatch_tint_adjustment.png "Tint adjustment tool")
+![4000 Weeks app update the birthdate popup.](readme_screenshots/update_birthday_popup.png "Add new birthday popup window.")
+
+Add data to a week in the grid popup.
+
+
+![4000 Weeks app week information popup.](readme_screenshots/week_data_popup.png "Add data to a week in the grid popup.")
 
 ## Author
 **Kelton Boyter-Grant**  
