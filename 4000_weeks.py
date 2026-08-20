@@ -1284,10 +1284,14 @@ class App:
     # ── Save / Load ───────────────────────────────────────────────────────────
 
     def save_data(self):
-        """Write the added data to a JSON file."""
+        """Write the added data to a JSON file with the extension .week """
         path = filedialog.asksaveasfilename(
-            defaultextension='.json',
-            filetypes=[('JSON files', '*.json'), ('All files', '*.*')],
+            defaultextension='.week',
+            filetypes=[
+                ('Week files', '*.week'),
+                ('JSON files', '*.json'),
+                ('All files', '*.*')
+                ],
             title='Save visualisation',
         )
         if not path:
@@ -1331,7 +1335,11 @@ class App:
     def load_data(self):
         """Load the selected JSON file and update the grid visualisation."""
         path = filedialog.askopenfilename(
-            filetypes=[('JSON files', '*.json'), ('All files', '*.*')],
+            filetypes=[
+                ('Week files', '*.week'),
+                ('JSON files', '*.json'), 
+                ('All files', '*.*')
+                ],
             title='Load visualisation',
         )
         if not path:
