@@ -102,6 +102,7 @@ event_types = [
     "Education",
     "Family",
     "Health",
+    "Hobbies",
     "Relationships",
     "Social",
     "Travel",
@@ -109,15 +110,16 @@ event_types = [
 
 event_type_colours = {
     "Select Category": BG,
-    "Activities"     : ORANGE,
-    "Career"         : GREEN,
-    "Education"      : BLUE,
-    "Family"         : LILAC,
-    "Health"         : POLLEN,
-    "Relationships"  : PINK,
+    "Activities"     : PEACH,
+    "Career"         : DARK_TEAL,
+    "Education"      : LILAC,
+    "Family"         : ROSE_RED,
+    "Health"         : MINT,
+    "Hobbies"        : MIDNIGHT_BLUE,
+    "Relationships"  : LIGHT_PINK,
     "Social"         : POLLEN,
-    "Travel"         : PURPLE,
-    "Other"          : MIDNIGHT_BLUE
+    "Travel"         : ULTRA_VIOLET,
+    "Other"          : WALNUT
 }
 
 
