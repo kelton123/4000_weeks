@@ -827,9 +827,10 @@ class App:
                         image_label.config(bg=category_colour)
 
                 # Description
-                if description_frame and description_label:
-                    description_frame.config(bg=category_colour)
-                    description_label.config(bg=category_colour)
+                if desc:
+                    if description_frame and description_label:
+                        description_frame.config(bg=category_colour)
+                        description_label.config(bg=category_colour)
 
         _update_widget_backgrounds_to_category()
 
