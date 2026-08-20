@@ -636,6 +636,7 @@ class App:
         has_note    = self._has_note_data(note)
         category    = note.get('category') if note else None
         has_category = bool(category and category != 'Select Category')
+        desc = None
 
         win = tk.Toplevel(self.root)
         win.overrideredirect(True)
@@ -712,14 +713,18 @@ class App:
                         "<Configure>", 
                         lambda event: description_label.config(wraplength=event.width)
                     )
-                else:
-                    # Fallback: Wrap to description_frame width if there are no images
-                    description_frame.bind(
-                        "<Configure>", 
-                        lambda event: description_label.config(wraplength=event.width)
-                    )
 
         win.update_idletasks()
+
+        # If there's no images_frame to drive width, set wraplength explicitly after layout calculation
+        if desc and not images_frame:
+            # Match wraplength to week_info's calculated pixel width minus frame padding
+            calc_width = week_info.winfo_reqwidth()
+            description_label.config(wraplength=max(calc_width, 220))
+            
+            # Re-evaluate layout size after applying wraplength
+            win.update_idletasks()
+
         win.geometry(f'+{screen_x + 20}+{screen_y + 20}')
         self._tooltip_win = win
 
@@ -738,15 +743,18 @@ class App:
                 category_name.config(bg=category_colour)
 
                 # Image row
-                body.config(bg=category_colour)
-                images_frame.config(bg=category_colour)
+                if body:
+                    body.config(bg=category_colour)
+                if images_frame:
+                    images_frame.config(bg=category_colour)
 
-                for image_label in self.image_labels:
-                    image_label.config(bg=category_colour)
+                    for image_label in self.image_labels:
+                        image_label.config(bg=category_colour)
 
                 # Description
-                description_frame.config(bg=category_colour)
-                description_label.config(bg=category_colour)
+                if description_frame and description_label:
+                    description_frame.config(bg=category_colour)
+                    description_label.config(bg=category_colour)
 
         _update_widget_backgrounds_to_category()
 
