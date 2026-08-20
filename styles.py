@@ -98,24 +98,26 @@ DEFAULT_LABEL_COLOURS = [
 event_types = [
     "Select Category",
     "Activities",
-    "Travel",
-    "Education",
     "Career",
-    "Relationships",
-    "Health",
+    "Education",
     "Family",
+    "Health",
+    "Relationships",
+    "Social",
+    "Travel",
     "Other"]
 
 event_type_colours = {
     "Select Category": BG,
     "Activities"     : ORANGE,
-    "Travel"         : PURPLE,
-    "Education"      : BLUE,
     "Career"         : GREEN,
-    "Relationships"  : PINK,
-    "Health"         : POLLEN,
+    "Education"      : BLUE,
     "Family"         : LILAC,
-    "Other"          : STONE
+    "Health"         : POLLEN,
+    "Relationships"  : PINK,
+    "Social"         : POLLEN,
+    "Travel"         : PURPLE,
+    "Other"          : MIDNIGHT_BLUE
 }
 
 
