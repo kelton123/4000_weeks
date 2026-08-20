@@ -1314,8 +1314,22 @@ class App:
                     os.makedirs(assets_dir, exist_ok=True)
                     ext      = os.path.splitext(img_src)[1]
                     dst_name = f'week_{wn}_{i}{ext}'
-                    shutil.copy2(img_src, os.path.join(assets_dir, dst_name))
+                    dst_path = os.path.join(assets_dir, dst_name)
+
+                    # Skip the copy if the image already lives at the
+                    # destination (e.g. this save was loaded and the user
+                    # is re-saving without changing that image). Copying a
+                    # file onto itself can raise PermissionError on Windows
+                    # (WinError 32) - Python 3.12+ routes same-drive copies
+                    # through the native CopyFile2 API, which doesn't allow
+                    # overwriting a file with itself.
+                    src_abs = os.path.normcase(os.path.normpath(os.path.abspath(img_src)))
+                    dst_abs = os.path.normcase(os.path.normpath(os.path.abspath(dst_path)))
+                    if src_abs != dst_abs:
+                        shutil.copy2(img_src, dst_path)
+
                     rel_paths.append(os.path.join('_assets', dst_name))
+
             entry['image_paths'] = rel_paths
             serialised_notes[str(wn)] = entry
 
@@ -1326,9 +1340,14 @@ class App:
             'week_labels':     {str(k): v for k, v in self._week_labels.items()},
             'week_notes':      serialised_notes,
         }
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(payload, f, indent=2)
 
+        try:
+            with open(path, 'w', encoding='utf-8') as f:
+                json.dump(payload, f, indent=2)
+        except Exception as error:
+            messagebox.showerror("Error", f"Something went wrong {error}", parent=self.root)
+            return
+        
         # Mark the app as not dirty
         self._mark_clean()
 
