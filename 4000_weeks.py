@@ -45,6 +45,10 @@ class App:
 
         self._dark_mode = True
 
+        # Handle unsaved changes to append '*' for unsaved work
+        self._dirty = False
+        self._birthday_text = "Add Birthday"
+
         self._build_ui()
         self._refresh()
         self.root.after(50, self._fix_scrollregion)
@@ -419,6 +423,46 @@ class App:
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
+    def _set_birthday_text(self, text:str):
+        '''
+        Updates the birthday label's text without the unsaved work suffix '*'.
+        '''
+        self._birthday_text = text
+        self._refresh_birthday_label()
+
+    def _refresh_birthday_label(self):
+        '''
+        Redraws the birthday label, appending '*' when there is unsaved work.
+        '''
+
+        suffix = "*" if self._dirty else ""
+
+        self.birthday.config(text=f"{self._birthday_text}{suffix}")
+
+    def _mark_dirty(self):
+        '''
+        Flags unsaved work and updates the birthday label to inform the user.
+        '''
+        if not self._dirty:
+            self._dirty = True
+            self._refresh_birthday_label()
+
+    def _mark_clean(self):
+        '''
+        Flags the unsaved-work flag
+        '''
+        if self._dirty:
+            self._dirty = False
+            self._refresh_birthday_label()
+
+    def has_unsaved_changes(self) -> bool:
+        '''
+        Returns the status of whether there are unsaved changes.
+        Used before quitting the app to prompt the user to save.
+        '''
+        return self._dirty
+    
+    
     def _refresh(self):
         try:
             dob      = date.fromisoformat(self.dob_var.get().strip())
@@ -1049,6 +1093,9 @@ class App:
             # keep the Week_Cell object's metadata in sync.
             self._apply_week_colour(week_num)
 
+            # Mark the work as dirty
+            self._mark_dirty()
+
             # Close the popup
             self.week_note_popup.destroy()
 
@@ -1185,13 +1232,16 @@ class App:
             # Update birthday label (shown as entered) and the internal ISO
             # value used for all of the date maths / grid rendering.
             try:
-                self.birthday.config(text=parsed.strftime("%d-%m-%Y"))
+                self._set_birthday_text(parsed.strftime("%d-%m-%Y"))
                 self.dob_var.set(parsed.isoformat())
                 self._refresh()
             except ValueError:
                 messagebox.showwarning("Warning", "Could not update birthday, please try again.", parent=self.root)
                 return
-                
+
+            # Mark the app as dirty
+            self._mark_dirty()
+
             popup.destroy()
         
         def close_popup(event=None):
@@ -1256,6 +1306,9 @@ class App:
         with open(path, 'w', encoding='utf-8') as f:
             json.dump(payload, f, indent=2)
 
+        # Mark the app as not dirty
+        self._mark_clean()
+
     def load_data(self):
         """Load the selected JSON file and update the grid visualisation."""
         path = filedialog.askopenfilename(
@@ -1303,7 +1356,7 @@ class App:
         self._refresh()
 
         # Update the date heading
-        self.birthday.config(text=self._dob.strftime("%d-%m-%Y"))
+        self._set_birthday_text(self._dob.strftime("%d-%m-%Y"))
 
 
 def main():
@@ -1312,7 +1365,10 @@ def main():
         '''
         Open a popup when use clicks the window close button to confirm if they do want to quit the app.
         '''
-        if messagebox.askokcancel("Quit", "Do you want to close the app? All unsaved weeks will be lost!"):
+        if weeks_app.has_unsaved_changes():
+            if messagebox.askokcancel("Quit", "Do you want to close the app? All unsaved weeks will be lost!"):
+                root.destroy()
+        else:
             root.destroy()
 
     root = tk.Tk()
@@ -1322,7 +1378,7 @@ def main():
     icon = tk.PhotoImage(file=get_resource_path("icons/app_icon.png"))
     root.iconphoto(True, icon)
 
-    App(root)
+    weeks_app = App(root)
     root.mainloop()
 
 
