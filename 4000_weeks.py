@@ -562,7 +562,7 @@ class App:
             self._tooltip_week = week_num
             self._show_tooltip(week_num, screen_x, screen_y)
         elif self._tooltip_win:
-            self._tooltip_win.geometry(f'+{screen_x + 14}+{screen_y + 14}')
+            self._position_grid_tooltip(self._tooltip_win, screen_x, screen_y)
 
     def _on_leave(self, _=None):
         self._hide_tooltip()
@@ -613,6 +613,36 @@ class App:
             except tk.TclError:
                 pass
             self._tooltip_buttons = None
+
+    def _position_grid_tooltip(self, win: tk.Toplevel, screen_x: int, screen_y: int):
+                ''' 
+                Positions the week grid tooltip relative to the mouse, fliping it
+                vertically or horizontally if the tooltip would clip the screen edges.
+                '''
+    
+                # Set the default position relative to the mouse=
+                pos_x = screen_x + 20
+                pos_y = screen_y + 20
+                
+                tooltip_width  = win.winfo_reqwidth()
+                tooltip_height = win.winfo_reqheight()
+    
+                # Screen dims
+                screen_width  = self.root.winfo_screenwidth()
+                screen_height = self.root.winfo_screenheight()
+    
+                # Flip tooltip above the mouse if it will clip with the bottom of the window
+                if pos_y + tooltip_height > screen_height:
+                    pos_y = screen_y - tooltip_height - 10
+    
+                # Shit the tooltip to the left if it will clip the right side of the window
+                if pos_x + tooltip_width > screen_width:
+                    pos_x = screen_x - tooltip_width - 10
+    
+                pos_x = max(0, pos_x)
+                pos_y = max(0, pos_y)
+    
+                win.geometry(f'+{pos_x}+{pos_y}')
 
     # Grid Tooltip
     def _show_tooltip(self, week_num: int, screen_x: int, screen_y: int):
@@ -725,8 +755,9 @@ class App:
             # Re-evaluate layout size after applying wraplength
             win.update_idletasks()
 
-        win.geometry(f'+{screen_x + 20}+{screen_y + 20}')
+        self._position_grid_tooltip(win, screen_x, screen_y)
         self._tooltip_win = win
+        self._tooltip_week = week_num
 
         def _update_widget_backgrounds_to_category():
             """Updates all background widgets in the popup to match the selected category type."""
