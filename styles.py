@@ -9,7 +9,7 @@ BOX           = 15          # box size in pixels
 GAP           = 4           # gap between boxes
 CELL          = BOX + GAP   # 20 px per cell
 YEAR_W        = 30          # left column reserved for year labels
-CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W + YEAR_W
+CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W
 
 # ── Colour palette ────────────────────────────────────────────────────────────
 

@@ -25,7 +25,7 @@ class App:
         self.root = root
         self.root.title("4000 Weeks")
         self.root.configure(bg=styles.BG)
-        self._center(960, 540)
+        self._center((styles.CANVAS_WIDTH + 20), 540)
         self.root.state("zoomed")
 
         # ── Runtime state ─────────────────────────────────────────
