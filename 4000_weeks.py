@@ -423,6 +423,24 @@ class App:
 
     # ── Data / rendering ──────────────────────────────────────────────────────
 
+    def _week_start_date(self, row: int, col: int) -> date:
+        '''
+        Calendar date for a given (row, col) grid cell.
+
+        Anchors each row to the real birthday + N calendar years, rather than
+        assuming every year is exactly 52 * 7 = 364 days. A calendar year is
+        365 (or 366) days, so naively doing
+        `dob + timedelta(weeks=row * 52 + col)` drifts behind real time by
+        about 1.25 days every row - roughly a month after 25 years.
+        '''
+        try:
+            year_anchor = self._dob.replace(year=self._dob.year + row)
+        except ValueError:
+            # dob was Feb 29 and the target year isn't a leap year.
+            year_anchor = self._dob.replace(month=2, day=28, year=self._dob.year + row)
+
+        return year_anchor + timedelta(weeks=col)
+
     def _set_birthday_text(self, text:str):
         '''
         Updates the birthday label's text without the unsaved work suffix '*'.
@@ -701,7 +719,7 @@ class App:
 
         row, col = divmod(week_num, styles.COLS)
         try:
-            week_start = self._dob + timedelta(weeks=week_num)
+            week_start = self._week_start_date(row, col)
             header = f'{row} Years & {col + 1} Weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
             header = f'{row} years & {col + 1} weeks'
@@ -884,7 +902,7 @@ class App:
 
         row, col = divmod(week_num, styles.COLS)
         try:
-            week_start = self._dob + timedelta(weeks=week_num)
+            week_start = self._week_start_date(row, col)
             title_text = f'{row} years & {col + 1} weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
             title_text = f'{row} years & {col + 1} weeks'
