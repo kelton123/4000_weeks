@@ -1219,14 +1219,51 @@ class App:
         lbl_name = widgets.BodyLabel(popup, text="Birthday (DD-MM-YYYY)")
         lbl_name.grid(row=0, column=0, sticky="w", pady=(0,20))
 
+        # Format the user text into XX-XX-XXXX as they are typing into the entry widget
+        def format_date(user_string: str, date_entry_widget):
+            digit_user_string = ""
+
+            # Filter non-digit characters
+            for char in user_string.get():
+                if char.isdigit():
+                    digit_user_string += char
+
+
+            # Keep the input to a length of 8
+            digit_user_string = digit_user_string[:8]
+
+            # Format the input to XX-XX-XXXX
+            formatted_date = ""
+
+            if len(digit_user_string) > 0:
+                formatted_date += digit_user_string[:2]
+            if len(digit_user_string) >= 3:
+                formatted_date += "-" + digit_user_string[2:4]
+            if len(digit_user_string) >= 5:
+                formatted_date += "-" + digit_user_string[4:8]
+
+            # Set the value of the entry widget with the new format
+            user_string.set(formatted_date)
+
+            # Move the cursor to the end
+            date_entry_widget.after_idle(lambda: date_entry_widget.icursor("end"))
+
+
+        # User string variable to perform date formatting on
+        user_date = tk.StringVar()
+
         # Create an entry widget 
-        ent_name = widgets.EntrySingleLineBody(popup)
+        ent_name = widgets.EntrySingleLineBody(popup, textvariable=user_date)
         ent_name.grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=(0,20))
         ent_name.focus_set()
+
+        # Listen to when the user date is updated by the user to run the date formatting
+        user_date.trace_add("write", lambda *args: format_date(user_date, ent_name))
 
         # If the user confirms try and update the swatch label
         def update_name(event=None):
             birthday = ent_name.get().strip()
+            
             if not birthday:
                 messagebox.showwarning("Warning", "Please enter a birthday!", parent=popup)
                 return
@@ -1234,7 +1271,8 @@ class App:
             # Validate the birthday - expects DD-MM-YYYY as labelled on the field.
             try:
                 parsed = datetime.strptime(birthday, "%d-%m-%Y").date()
-            except ValueError:
+            except ValueError as error:
+                print(error)
                 messagebox.showwarning(
                     "Warning",
                     "Please enter the birthday as DD-MM-YYYY, e.g. 15-10-1998.",
