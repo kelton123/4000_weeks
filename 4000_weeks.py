@@ -1154,7 +1154,7 @@ class App:
         self.event_type_dropdown.focus_set()
 
         # Bind keyboard shortcuts for the popup
-        self.week_note_popup.bind("<Return>", _save)
+        self.week_note_popup.bind("<Control-Return>", _save)
         self.week_note_popup.bind("<Escape>", _close)
         self.week_note_popup.bind("<Control-space>", _clear)
 
