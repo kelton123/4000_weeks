@@ -15,7 +15,7 @@ CANVAS_WIDTH  = YEAR_W + COLS * CELL + GAP + YEAR_W
 
 # Dark Mode Theme
 BG            = '#121212'
-PAST_COLOR    = '#8e8e93'
+PAST_COLOR    = "#b0b0b7"
 NOW_COLOR     = '#ffffff'
 FUTURE_COLOR  = '#3a3a3c'
 TEXT_FG       = '#f2f2f7'
