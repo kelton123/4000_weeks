@@ -53,6 +53,19 @@ class App:
         self._refresh()
         self.root.after(50, self._fix_scrollregion)
 
+        # ── KEYBOARD BINDINGS ───────────────────────────────────────────────────────────
+        # Save the file
+        self.root.bind("<Command-s>", self.save_data)
+        self.root.bind("<Control-s>", self.save_data)
+
+        # Open a file
+        self.root.bind("<Command-o>", self.load_data)
+        self.root.bind("<Control-o>", self.load_data)
+
+        # Toggle theme colours
+        self.root.bind("<Command-t>", self._toggle_theme)
+        self.root.bind("<Control-t>", self._toggle_theme)
+
     # ── Window setup ──────────────────────────────────────────────────────────
 
     def _take_focus(self, event: tk.Event = None):
@@ -200,7 +213,7 @@ class App:
         icon = icon.resize(size)
         return ImageTk.PhotoImage(icon)
 
-    def _toggle_theme(self):
+    def _toggle_theme(self, event=None):
         '''
         Toggles between the dark and light themes defined in styles.py.
 
@@ -1321,7 +1334,7 @@ class App:
 
     # ── Save / Load ───────────────────────────────────────────────────────────
 
-    def save_data(self):
+    def save_data(self, event=None):
         """Write the added data to a JSON file with the extension .week """
         path = filedialog.asksaveasfilename(
             defaultextension='.week',
@@ -1389,7 +1402,7 @@ class App:
         # Mark the app as not dirty
         self._mark_clean()
 
-    def load_data(self):
+    def load_data(self, event=None):
         """Load the selected JSON file and update the grid visualisation."""
         path = filedialog.askopenfilename(
             filetypes=[
