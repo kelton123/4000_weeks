@@ -48,6 +48,7 @@ class App:
         # Handle unsaved changes to append '*' for unsaved work
         self._dirty = False
         self._birthday_text = "Add Birthday"
+        self.active_file_path = None
 
         self._build_ui()
         self._refresh()
@@ -1336,17 +1337,25 @@ class App:
 
     def save_data(self, event=None):
         """Write the added data to a JSON file with the extension .week """
-        path = filedialog.asksaveasfilename(
-            defaultextension='.week',
-            filetypes=[
-                ('Week files', '*.week'),
-                ('JSON files', '*.json'),
-                ('All files', '*.*')
-                ],
-            title='Save visualisation',
-        )
-        if not path:
-            return
+        path = None
+
+        # Check if we already have a file path to save to. If the user opened a file.
+        if self.active_file_path is None:
+            # Open the file dialog and ask the user to specify the path the save the data to.
+            path = filedialog.asksaveasfilename(
+                defaultextension='.week',
+                filetypes=[
+                    ('Week files', '*.week'),
+                    ('JSON files', '*.json'),
+                    ('All files', '*.*')
+                    ],
+                title='Save visualisation',
+            )
+
+            if not path:
+                return
+        else:
+            path = self.active_file_path
 
         save_dir   = os.path.dirname(os.path.abspath(path))
         assets_dir = os.path.join(save_dir, '_assets')
@@ -1454,6 +1463,9 @@ class App:
 
         # Update the date heading
         self._set_birthday_text(self._dob.strftime("%d-%m-%Y"))
+
+        # With the data successfully loaded, set the active file path
+        self.active_file_path = path
 
 
 def main():
