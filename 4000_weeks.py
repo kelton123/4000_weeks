@@ -732,23 +732,25 @@ class App:
         self._hide_tooltip()
 
         row, col = divmod(week_num, styles.COLS)
+
         try:
             week_start = self._week_start_date(row, col)
             header = f'{row} Years & {col + 1} Weeks | {week_start.strftime("%b %Y")}'
         except (AttributeError, TypeError):
             header = f'{row} years & {col + 1} weeks'
 
-        note        = self._week_notes.get(week_num)
-        has_note    = self._has_note_data(note)
-        category    = note.get('category') if note else None
+        note         = self._week_notes.get(week_num)
+        has_note     = self._has_note_data(note)
+        category     = note.get('category') if note else None
         has_category = bool(category and category != 'Select Category')
-        desc = None
+        desc         = None
 
         win = tk.Toplevel(self.root)
         win.overrideredirect(True)
         win.configure(bg=styles.BG)
         win.attributes('-topmost', True)
 
+        # Define padding for the data in the week tooltip
         pad = 10
 
         # Week Information Label that is always shown.
@@ -880,9 +882,11 @@ class App:
         """Helper function which returns what information a week widget has."""
         if not note:
             return False
-        has_description = bool(note.get('description'))
+        
+        has_description  = bool(note.get('description'))
         has_images       = bool(note.get('image_paths'))
         has_category     = bool(note.get('category') and note.get('category') != 'Select Category')
+
         return has_description or has_images or has_category
 
     def update_popup_background(self, event=None):
