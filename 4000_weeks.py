@@ -779,35 +779,50 @@ class App:
             # Render every saved image (up to 4) as small thumbnails in a row.
             img_paths = [p for p in (note.get('image_paths') or [])
                          if p and os.path.isfile(p)]
+            
             if img_paths:
                 images_frame = widgets.Frame(body)
                 images_frame.pack(side='left', padx=(0, 10), anchor='n')
 
                 if week_num not in self._photo_cache:
                     thumbs = []
+
                     for p in img_paths[:4]:
                         try:
                             img = Image.open(p)
-                            img.thumbnail((100, 100))
+                            img.thumbnail((150, 150))
                             thumbs.append(ImageTk.PhotoImage(img))
                         except Exception:
                             pass
+
                     self._photo_cache[week_num] = thumbs
 
                 thumbs = self._photo_cache.get(week_num, [])
 
-                # Layout the all images in a row
+                # Layout the all images in a 2 x 2 grid
                 self.image_labels = []
+
+                current_row    = 0
+                current_column = 0
+
                 for i, photo in enumerate(thumbs):
+                    if i == 2:
+                        current_row    = 1
+                        current_column = 0
+
+                    current_column += 1
+
                     image_label = widgets.BodyLabel(images_frame, image=photo)
                     image_label.image = photo
-                    image_label.grid(row=0, column=i, padx=2, pady=2, sticky="s")
+                    image_label.grid(row=current_row, column=current_column, padx=2, pady=2, sticky="s")
 
                     self.image_labels.append(image_label)
 
 
-            # If the week already has a description. Placed under the images.
+        # If the week already has a description. Placed under the images.
+        if has_note:
             desc = note.get('description', '').strip()
+
             if desc:
                 description_frame = widgets.Frame(win)
                 description_frame.pack(fill="x", padx=pad, pady=(2, 20))
@@ -815,23 +830,14 @@ class App:
                 description_label = widgets.BodyLabel(description_frame, text=desc, justify="left", anchor="w")
                 description_label.pack(anchor='s', fill="x")
 
-                # Update wraplength dynamically when images_frame is rendered/resized
-                if images_frame:
-                    images_frame.bind(
-                        "<Configure>", 
-                        lambda event: description_label.config(wraplength=event.width)
-                    )
+                # Match wraplength to week_info's calculated pixel width minus frame padding
+                calc_width = week_info.winfo_reqwidth()
 
-        win.update_idletasks()
-
-        # If there's no images_frame to drive width, set wraplength explicitly after layout calculation
-        if desc and not images_frame:
-            # Match wraplength to week_info's calculated pixel width minus frame padding
-            calc_width = week_info.winfo_reqwidth()
-            description_label.config(wraplength=max(calc_width, 220))
-            
-            # Re-evaluate layout size after applying wraplength
-            win.update_idletasks()
+                # Set the description text to wrap at the calculated width for consistency with or without images.
+                description_label.config(wraplength=calc_width)
+                
+                # Re-evaluate layout size after applying wraplength
+                win.update_idletasks()
 
         self._position_grid_tooltip(win, screen_x, screen_y)
         self._tooltip_win = win
