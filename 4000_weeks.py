@@ -1027,24 +1027,33 @@ class App:
 
         def _load_previews():
             """Renders images onto the 4 canvases, filling each canvas completely (object-fit: cover)."""
-            img_row.update_idletasks()  # Forces Tkinter to compute real canvas pixel sizes
+            img_row.update_idletasks()
 
-            for i, c in enumerate(canvases):
-                c.delete('all')
+            for i, canvas in enumerate(canvases):
+                # Get the file path for this canvas.
+                path = chosen_paths[i] if i < len(chosen_paths) else None
+
+                # Check if this image is already loaded in this canvas
+                # If it is already loading, pass and move on.
+                if getattr(canvas, 'current_path', None) == path:
+                    continue
+
+                canvas.delete('all')
                 photo_refs[i] = None
-                c.image = None
+                canvas.image = None
 
                 if i < len(chosen_paths):
                     path = chosen_paths[i]
+
                     if path and os.path.isfile(path):
                         try:
-                            cw = c.winfo_width()
-                            ch = c.winfo_height()
+                            canvas_width = canvas.winfo_width()
+                            canvas_height = canvas.winfo_height()
 
                             # Fallbacks if called before canvas geometry finishes rendering
-                            if cw <= 1 or ch <= 1:
-                                cw = 120
-                                ch = row_height * 2 if i < 2 else row_height
+                            if canvas_width <= 1 or canvas_height <= 1:
+                                canvas_width = 120
+                                canvas_height = row_height * 2 if i < 2 else row_height
 
                             img = Image.open(path)
 
@@ -1052,17 +1061,17 @@ class App:
                             # centering=(0.5, 0.5) crops equally from edges (centered)
                             fitted_img = ImageOps.fit(
                                 img, 
-                                (cw, ch), 
+                                (canvas_width, canvas_height), 
                                 method=Image.Resampling.LANCZOS, 
                                 centering=(0.5, 0.5)
                             )
 
                             photo = ImageTk.PhotoImage(fitted_img)
                             photo_refs[i] = photo
-                            c.image = photo  # Prevent Garbage Collection
+                            canvas.image = photo  # Prevent Garbage Collection
 
                             # Place image at canvas center
-                            c.create_image(cw // 2, ch // 2, image=photo, anchor='center')
+                            canvas.create_image(canvas_width // 2, canvas_height // 2, image=photo, anchor='center')
                         except Exception:
                             pass
 
@@ -1083,9 +1092,13 @@ class App:
                     ('All files', '*.*')
                 ]
             )
+
+            # If the user has chosen at least one image, append the image to a maximum of 4.
             if image_paths:
-                chosen_paths.clear()
-                chosen_paths.extend(list(image_paths)[:4])
+                for image_path in image_paths:
+                    if image_path not in chosen_paths and len(chosen_paths) < 4:
+                        chosen_paths.append(image_path)
+                    
                 _load_previews()
 
 
