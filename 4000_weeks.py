@@ -799,22 +799,13 @@ class App:
 
                 thumbs = self._photo_cache.get(week_num, [])
 
-                # Layout the all images in a 2 x 2 grid
+                # Layout the all images in a row
                 self.image_labels = []
 
-                current_row    = 0
-                current_column = 0
-
                 for i, photo in enumerate(thumbs):
-                    if i == 2:
-                        current_row    = 1
-                        current_column = 0
-
-                    current_column += 1
-
                     image_label = widgets.BodyLabel(images_frame, image=photo)
                     image_label.image = photo
-                    image_label.grid(row=current_row, column=current_column, padx=2, pady=2, sticky="s")
+                    image_label.grid(row=0, column=i, padx=2, pady=2, sticky="nsew")
 
                     self.image_labels.append(image_label)
 
@@ -831,10 +822,19 @@ class App:
                 description_label.pack(anchor='s', fill="x")
 
                 # Match wraplength to week_info's calculated pixel width minus frame padding
-                calc_width = week_info.winfo_reqwidth()
+                wrap_width = week_info.winfo_reqwidth()
+                
+                if images_frame:
+                    # Update the layout to get an accurate calculation
+                    images_frame.update_idletasks()
+
+                    image_frame_width = images_frame.winfo_reqwidth()
+
+                    if wrap_width < image_frame_width:
+                        wrap_width = image_frame_width
 
                 # Set the description text to wrap at the calculated width for consistency with or without images.
-                description_label.config(wraplength=calc_width)
+                description_label.config(wraplength=wrap_width)
                 
                 # Re-evaluate layout size after applying wraplength
                 win.update_idletasks()
