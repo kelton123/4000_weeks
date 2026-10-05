@@ -1024,6 +1024,16 @@ class App:
         photo_refs = [None] * 4
         filename_var = tk.StringVar()
 
+        def _clear_previews():
+            """Clears the rendered images in the weekly popup dialog."""
+            img_row.update_idletasks()
+
+            for i, canvas in enumerate(canvases):
+                canvas.delete('all')
+                photo_refs[i] = None
+                canvas.image  = None
+
+            img_row.update_idletasks()
 
         def _load_previews():
             """Renders images onto the 4 canvases, filling each canvas completely (object-fit: cover)."""
@@ -1159,13 +1169,18 @@ class App:
             """Reset the information in the popup."""
             self._week_notes.pop(week_num, None)
             self._photo_cache.pop(week_num, None)
+
+            # Update the category and background colour.
             self.event_type_dropdown.set("Select Category")
             self.update_popup_background()
 
+            # Reset the image preview.
             chosen_paths.clear()
-            description_box.delete('1.0', 'end')
-            _load_previews()
+            _clear_previews()
 
+            # Reset the description text.
+            description_box.delete('1.0', 'end')
+            
             # Repaint the square back to its default colour immediately.
             self._apply_week_colour(week_num)
 
