@@ -44,48 +44,21 @@ ACCENT_FG     = BG_DARK
 
 
 # Label Colours
-RED           = "#d91d2a"
-ORANGE        = "#ff6410"
-APRICOT       = "#fc7450"
-PEACH         = "#e57e5e"
-POLLEN        = "#FFD25B"
-FLASH_LIGHT   = "#f7ec00"
-FLASH         = "#e1f322"
-GREEN         = "#8DE328"
-MINT          = "#aeec9d"
-TURQUOISE     = "#9ed5cc"
-LIGHT_BLUE    = "#6ac5dd"
-BLUE          = "#1ab5fc"
-ROYAL_BLUE    = "#63aeee"
-LILAC         = "#c1d8fd"
-MIST_BLUE     = "#b3b8a7"
-AZURE         = "#879aa1"
 BLUE_COBALT   = "#477e9d"
-DARK_TEAL     = "#357393"
-DENIM_BLUE    = "#5b83a8"
-MIDNIGHT_BLUE = "#6084bf"
-OCEAN_BLUE    = "#7388c7"
-PURPLE        = "#997cf7"
+RED           = "#d91d2a"
 ULTRA_VIOLET  = "#7157be"
-LAVENDAR      = "#b29aa6"
-PINK_SAND     = "#ffc2a9"
-LIGHT_PINK    = "#f4b0aa"
-PINK          = "#ff5964"
-ELECTRIC_PINK = "#ff4e51"
-ROSE_RED      = "#b92946"
-CAMELLIA      = "#c94544"
-FLAMINGO      = "#d3836A"
-WALNUT        = "#b08664"
-STONE         = "#af9980"
-PEBBLE        = "#ad9d8e"
-DARK_OLIVE    = "#8c8c76"
+MIDNIGHT_BLUE = "#6084bf"
+DARK_OLIVE    = "#72ad6b"
+APRICOT       = "#fc7450"
+HARVEST_GOLD  = "#ecb620"
 
 PALETTE = [
-    RED, ORANGE, APRICOT, PEACH, POLLEN, FLASH_LIGHT, FLASH, GREEN, MINT,
-    TURQUOISE, LIGHT_BLUE, BLUE, ROYAL_BLUE, LILAC, MIST_BLUE, AZURE,
-    BLUE_COBALT, DARK_TEAL, DENIM_BLUE, MIDNIGHT_BLUE, OCEAN_BLUE, PURPLE,
-    ULTRA_VIOLET, LAVENDAR, PINK_SAND, LIGHT_PINK, PINK, ELECTRIC_PINK,
-    ROSE_RED, CAMELLIA, FLAMINGO, WALNUT, STONE, PEBBLE, DARK_OLIVE,
+    RED, 
+    APRICOT,
+    BLUE_COBALT,
+    MIDNIGHT_BLUE,
+    ULTRA_VIOLET,
+    DARK_OLIVE,
 ]
 
 DEFAULT_LABEL_COLOURS = [
@@ -97,29 +70,22 @@ DEFAULT_LABEL_COLOURS = [
 # ── Event Types ────────────────────────────────────────────────────────────────
 event_types = [
     "Select Category",
-    "Activities",
     "Career",
-    "Education",
-    "Family",
-    "Health",
-    "Hobbies",
     "Relationships",
-    "Social",
+    "Leisure",
+    "Study",
     "Travel",
-    "Other"]
+    "Other"
+    ]
 
 event_type_colours = {
     "Select Category": BG,
-    "Activities"     : PEACH,
-    "Career"         : DARK_TEAL,
-    "Education"      : LILAC,
-    "Family"         : ROSE_RED,
-    "Health"         : MINT,
-    "Hobbies"        : MIDNIGHT_BLUE,
-    "Relationships"  : LIGHT_PINK,
-    "Social"         : POLLEN,
+    "Career"         : MIDNIGHT_BLUE,
+    "Relationships"  : RED,
+    "Leisure"        : HARVEST_GOLD,
+    "Study"          : DARK_OLIVE,
     "Travel"         : ULTRA_VIOLET,
-    "Other"          : WALNUT
+    "Other"          : APRICOT
 }
 
 
